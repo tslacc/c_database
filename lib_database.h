@@ -13,8 +13,9 @@ struct Database{
 };
 struct Table{
 	char *name;
-	struct Record *entries;
-	int num_entries;
+	struct Record **records;
+	int num_records;
+	int max_records;
 };
 struct Record{
 	char *name;
@@ -25,9 +26,9 @@ struct Record{
 	} value;
 };
 struct Database *new_db();
-struct Table *db_lookup_table(const struct Database db, const char *_name);
-struct Record *table_lookup_record(const struct Table tb, const char *_name);
-struct Table *db_new_table(struct Database *db, const char *_name);
+struct Table *database_lookup_table(const struct Database *db, const char *_name);
+struct Record *table_lookup_record(const struct Table *tb, const char *_name);
+struct Table *database_new_table(struct Database *db, const char *_name);
 struct Record *table_new_record(struct Table *tb, const char *_name, void *value);
 void debug_print();
 
