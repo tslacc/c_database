@@ -7,26 +7,30 @@ struct Database *new_db(){
 	result->max_tables = 1;
 	return result;
 }
-//For reuse purposes, Lookup will return null IFF there is no de-allocated table in this database.
-//If there is a deallocated table, Lookup may return that pointer but pointing to null: if so, create a new table in that location.
-struct Table *database_new_table(struct Database *db, const char *_name){
-	struct Table *result = database_lookup_table(db, _name);
-	if(result!=NULL){
-		return result;
+//Either looks up the matching table or allocates a new table in the db matching the name..
+struct Table *database_lookup_or_new_table(struct Database *db, const char *_name){
+	int index = database_lookup_table(db, _name);
+	if(index!=-1 && db->tables[index] != NULL){ //A table already exists
+		return db->tables[index];
+	} else if (index!=-1 && db->tables[index] == NULL) { //A table doesn't already exist, but *result points to NULL and therefore can be changed to point to a new struct.
+		db->tables[index] = malloc(sizeof(struct Table));
+		db->num_tables++;
+		return db->tables[index];
+	} else { //No table exists: resize and allocate.
+		if(db->max_tables <= db->num_tables){
+			db->max_tables*=RESIZE_SCALE;
+			db->tables=realloc(db->tables,(sizeof(struct Table)*db->max_tables));
+		}
+		db->tables[db->num_tables] = malloc(sizeof(struct Table));
+		db->num_tables++;
+		return db->tables[db->num_tables-1];
 	}
-	result = malloc(sizeof(struct Table *));
-	if(db->max_tables <= db->num_tables){
-		db->max_tables*=RESIZE_SCALE;
-		db->tables=realloc(db->tables,(sizeof(struct Table)*db->max_tables));
-	}
-	db->tables[db->num_tables]=result;
-	//TODO Change if this new table fills a hole instead;
-	db->num_tables++;
-	return result;
+		
 }
 //TODO Implement
-struct Table *database_lookup_table(const struct Database *db, const char *_name){
-	return NULL;
+//Modification: now returns the integer offset of the pointer to EITHER a complete match (Table exists and name matches) or a blank table (Table doesn't exist but resize isn't needed)
+int database_lookup_table(const struct Database *db, const char *_name){
+	return -1;
 }
 
 

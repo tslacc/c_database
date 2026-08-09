@@ -27,8 +27,8 @@ struct Record{
 	} value;
 };
 struct Database *new_db();
-struct Table *database_new_table(struct Database *db, const char *_name);
-struct Table *database_lookup_table(const struct Database *db, const char *_name);
+struct Table *database_lookup_or_new_table(struct Database *db, const char *_name);
+int database_lookup_table(const struct Database *db, const char *_name);
 
 struct Record *table_new_record(struct Table *tb, const char *_name, void *value);
 struct Record *table_lookup_record(const struct Table *tb, const char *_name);
