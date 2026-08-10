@@ -1,14 +1,15 @@
 #include "lib_database.h"
 
 const int RESIZE_SCALE = 2;
-struct Database *new_db(){
-	struct Database *result = malloc(sizeof(struct Database));
-	result->num_tables = 0;
-	result->max_tables = 1;
-	return result;
+
+//TODO Implement
+//Modification: now returns the integer offset of the pointer to EITHER a complete match (Table exists and name matches) or a blank table (Table doesn't exist but resize isn't needed)
+static int database_lookup_table(const struct Database *db, const char *_name){
+	return -1;
 }
+
 //Either looks up the matching table or allocates a new table in the db matching the name..
-struct Table *database_lookup_or_new_table(struct Database *db, const char *_name){
+static struct Table *database_lookup_or_new_table(struct Database *db, const char *_name){
 	int index = database_lookup_table(db, _name);
 	if(index!=-1 && db->tables[index] != NULL){ //A table already exists
 		return db->tables[index];
@@ -27,12 +28,15 @@ struct Table *database_lookup_or_new_table(struct Database *db, const char *_nam
 	}
 		
 }
-//TODO Implement
-//Modification: now returns the integer offset of the pointer to EITHER a complete match (Table exists and name matches) or a blank table (Table doesn't exist but resize isn't needed)
-int database_lookup_table(const struct Database *db, const char *_name){
-	return -1;
-}
 
+struct Database *new_db(){
+	struct Database *result = malloc(sizeof(struct Database));
+	result->num_tables = 0;
+	result->max_tables = 1;
+	result->lookup_or_new_table = database_lookup_or_new_table;
+	result->lookup_table_index = database_lookup_table;
+	return result;
+}
 
 struct Record *table_new_record(struct Table *tb, const char *_name, void *value){
 	struct Record *result = table_lookup_record(tb, _name);

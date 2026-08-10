@@ -11,6 +11,9 @@ struct Database{
 	struct Table **tables;
 	int num_tables;
 	int max_tables;
+	int (*fptr)(int);
+	struct Table * (*lookup_or_new_table)(struct Database *db, const char *_name);
+	int (*lookup_table_index)(const struct Database *db, const char *_name);
 };
 struct Table{
 	char *name;
@@ -27,8 +30,6 @@ struct Record{
 	} value;
 };
 struct Database *new_db();
-struct Table *database_lookup_or_new_table(struct Database *db, const char *_name);
-int database_lookup_table(const struct Database *db, const char *_name);
 
 struct Record *table_new_record(struct Table *tb, const char *_name, void *value);
 struct Record *table_lookup_record(const struct Table *tb, const char *_name);
