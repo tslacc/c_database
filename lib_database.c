@@ -1,4 +1,7 @@
 #include "lib_database.h"
+#include <string.h>
+#include <stddef.h>
+#include <stdlib.h>
 
 const int RESIZE_SCALE = 2;
 
@@ -28,7 +31,19 @@ static struct Table *database_lookup_or_new_table(struct Database *db, const cha
 	}
 		
 }
-
+static struct Table *new_table(const char *name){
+	struct Table *result = malloc(sizeof(struct Table));
+	result->max_records = result->num_records = 1;
+	result->add_new_record = NULL;
+	result->lookup_record_index = NULL;
+	return result;
+}
+static struct Record *new_record(const char *name){
+	struct Record *result = malloc(sizeof(struct Record));
+	memcpy(result->name, name, strlen(name));
+	result->value.as_int = 0;
+	return result;
+}
 struct Database *new_db(){
 	struct Database *result = malloc(sizeof(struct Database));
 	result->num_tables = 0;
@@ -37,13 +52,18 @@ struct Database *new_db(){
 	result->lookup_table_index = database_lookup_table;
 	return result;
 }
-
+//TODO finish implementing logic
 struct Record *table_new_record(struct Table *tb, const char *_name, void *value){
-	struct Record *result = table_lookup_record(tb, _name);
-	if(result != NULL){
-		return result;
+	int index = tb->lookup_record_index(tb, _name);
+	
+	if(index == -1){ //no record exists and no space exists, realloc
+		return NULL;
+	} else if(index != -1 && tb->records[index]==NULL){ //No record exists but space exists. Allocate object
+		
+	} else { //Matching record already exists. Return this struct.
+		return tb->records[index];
 	}
-	result = malloc(sizeof(struct Record *));
+	struct Record *result = malloc(sizeof(struct Record *));
 	if(tb->max_records <= tb->num_records){
 		tb->max_records*=RESIZE_SCALE;
 		tb->records=realloc(tb->records,(sizeof(struct Record)*tb->max_records));

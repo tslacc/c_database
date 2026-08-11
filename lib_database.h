@@ -1,8 +1,6 @@
 #ifndef LIB_DATABASE
 #define LIB_DATABASE
 
-#include <stddef.h>
-#include <stdlib.h>
 //Basic database containing a list of struct Record.
 //Each record contains exactly one name and one value.
 
@@ -20,6 +18,8 @@ struct Table{
 	struct Record **records;
 	int num_records;
 	int max_records;
+	struct Record * (*add_new_record)(struct Table *tb, const char *_name);
+	int (*lookup_record_index)(const struct Table *tb, const char *_name);
 };
 struct Record{
 	char *name;
@@ -30,10 +30,6 @@ struct Record{
 	} value;
 };
 struct Database *new_db();
-
-struct Record *table_new_record(struct Table *tb, const char *_name, void *value);
-struct Record *table_lookup_record(const struct Table *tb, const char *_name);
-
 void debug_print();
 
 #endif
