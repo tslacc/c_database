@@ -7,10 +7,10 @@ const int RESIZE_SCALE = 2;
 
 //RECORDS	==========================================================================================================
 //Allocate a new record.
+//Do not populate any values except "name".
 static struct Record *new_record(const char *name){
 	struct Record *result = malloc(sizeof(struct Record));
 	memcpy(result->name, name, strlen(name));
-	result->value.as_int = 0;
 	return result;
 }
 

@@ -1,9 +1,16 @@
 #ifndef LIB_DATABASE
 #define LIB_DATABASE
 
+
+union value{
+	int as_int;
+	float as_float;
+	char as_char[sizeof(float)];
+};
+
 //Basic database containing a list of struct Record.
 //Each record contains exactly one name and one value.
-
+//TODO: A record can contain any number of values, up to the number of row headers present in the table.
 struct Database{
 	char *path;
 	struct Table **tables;
@@ -15,6 +22,8 @@ struct Database{
 };
 struct Table{
 	char *name;
+	char **headers;
+	int num_headers;
 	struct Record **records;
 	int num_records;
 	int max_records;
@@ -23,11 +32,7 @@ struct Table{
 };
 struct Record{
 	char *name;
-	union{
-		int as_int;
-		float as_float;
-		char as_char[sizeof(float)];
-	} value;
+	union value values[];
 };
 struct Database *new_db();
 void debug_print();
