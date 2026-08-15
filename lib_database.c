@@ -17,6 +17,11 @@ static struct Record *new_record(const char *name){
 //TABLES	=========================================================================================================
 //Searches for an empty slot to enter a new record or returns -1 if non exists.
 static int table_search_blank(const struct Table *tb){
+	//Basic linear search
+	if(tb->num_records>=tb->max_records) return -1;
+	for(int i = 0; i < tb->max_records; i++){
+		if(tb->records[i]==NULL) return i;
+	}
 	return -1;
 }
 //TODO change to string-based parsing
@@ -54,9 +59,17 @@ static struct Table *new_table(const char *name){
 
 //DATABASES =============================================================================================================================================================================================
 static int database_search_blank(const struct Database *db){
+	//Basic linear search on unordered list
+	if(db->num_tables>=db->max_tables) return -1;
+	for(int i = 0; i < db->max_tables; i++){
+		if(db->tables[i]==NULL) return i;
+	}
 	return -1;
 }
 static int database_lookup_table(const struct Database *db, const char *_name){
+	for(int i = 0; i < db->num_tables; i++){
+		if(strcmp(db->tables[i]->name,_name)==0) return i;
+	}
 	return -1;
 }
 //Either looks up the matching table or allocates a new table in the db matching the name..
