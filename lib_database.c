@@ -22,6 +22,9 @@ static int table_search_blank(const struct Table *tb){
 //TODO change to string-based parsing
 //Lookup a single record by name and return the first value.
 static struct Record *table_lookup_record(const struct Table *tb, const char *_name){
+	for(int i = 0; i < tb->num_records; i++){
+		if(strcmp(tb->records[i]->name,_name)==0) return tb->records[i];
+	}
 	return NULL;
 }
 //Adds a new record to the table.
