@@ -25,6 +25,7 @@ struct Table{
 	char *name;
 	char **headers;
 	int num_headers;
+	int max_headers;
 	struct Record **records;
 	int num_records;
 	int max_records;
@@ -34,7 +35,7 @@ struct Table{
 };
 struct Record{
 	char *name;
-	union value values[];
+	union value *values;
 };
 struct Database *new_db();
 void debug_print();

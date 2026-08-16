@@ -24,13 +24,23 @@ static int table_search_blank(const struct Table *tb){
 	}
 	return -1;
 }
-//TODO change to string-based parsing
 //Lookup a single record by name and return the first value.
 static struct Record *table_lookup_record(const struct Table *tb, const char *_name){
 	for(int i = 0; i < tb->num_records; i++){
 		if(strcmp(tb->records[i]->name,_name)==0) return tb->records[i];
 	}
 	return NULL;
+}
+static void add_header(struct Table *tb, const char *_name){
+	if(tb->num_headers>=tb->max_headers){
+		tb->max_headers *= RESIZE_SCALE;
+		tb->headers = realloc(tb->headers, (sizeof(char *)*tb->max_headers));
+		for(int i = 0; i < tb->num_records; i++){
+			tb->records[i]->values = realloc(tb->records[i]->values, sizeof(union value)*tb->max_headers);
+		}
+	}
+	memcpy(tb->headers[tb->num_headers], _name, strlen(_name));
+	return;
 }
 //Adds a new record to the table.
 struct Record *table_new_record(struct Table *tb, const char *_name){
@@ -44,6 +54,7 @@ struct Record *table_new_record(struct Table *tb, const char *_name){
 		tb->records[index] = result;
 	}
 	tb->num_records++;
+	result->values = malloc(sizeof(union value)*tb->num_headers);
 	return result;
 	
 }
@@ -51,7 +62,10 @@ struct Record *table_new_record(struct Table *tb, const char *_name){
 //Allocate a new table.
 static struct Table *new_table(const char *name){
 	struct Table *result = malloc(sizeof(struct Table));
-	result->max_records = result->num_records = 1;
+	result->num_headers = 1;
+	result->max_headers = 1;
+	result->max_records = 1;
+	result->num_records = 1;
 	result->add_new_record = NULL;
 	result->lookup_record_index = NULL;
 	return result;
