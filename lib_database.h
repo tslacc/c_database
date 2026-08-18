@@ -16,7 +16,6 @@ struct Database{
 	int num_tables;
 	int max_tables;
 	int (*fptr)(int);
-	//TODO reconcile mismatch
 	struct Table * (*add_new_table)(struct Database *db, const char *_name);
 	int (*lookup_table_index)(const struct Database *db, const char *_name);
 };
@@ -28,7 +27,6 @@ struct Table{
 	struct Record **records;
 	int num_records;
 	int max_records;
-	//TODO reconcile mismatch
 	struct Record * (*add_new_record)(struct Table *tb, const char *_name);
 	int (*lookup_record_index)(const struct Table *tb, const char *_name);
 };
