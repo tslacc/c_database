@@ -10,7 +10,6 @@ union value{
 
 //Basic database containing a list of struct Record.
 //Each record contains exactly one name and one value.
-//TODO: A record can contain any number of values, up to the number of row headers present in the table.
 struct Database{
 	char *path;
 	struct Table **tables;
@@ -18,7 +17,7 @@ struct Database{
 	int max_tables;
 	int (*fptr)(int);
 	//TODO reconcile mismatch
-	struct Table * (*lookup_or_new_table)(struct Database *db, const char *_name);
+	struct Table * (*add_new_table)(struct Database *db, const char *_name);
 	int (*lookup_table_index)(const struct Database *db, const char *_name);
 };
 struct Table{

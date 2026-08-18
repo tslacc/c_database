@@ -88,7 +88,7 @@ static int database_lookup_table(const struct Database *db, const char *_name){
 }
 //Either looks up the matching table or allocates a new table in the db matching the name..
 static struct Table *database_new_table(struct Database *db, const char *_name){
-	int index = database_lookup_table(db, _name);
+	int index = database_search_blank(db);
 	struct Table *result = new_table(_name);
 	if(index==-1){//No space exists. Expand and allocate
 		db->max_tables*=RESIZE_SCALE;
@@ -105,7 +105,7 @@ struct Database *new_db(){
 	struct Database *result = malloc(sizeof(struct Database));
 	result->num_tables = 0;
 	result->max_tables = 1;
-	result->lookup_or_new_table = database_new_table;
+	result->add_new_table = database_new_table;
 	result->lookup_table_index = database_lookup_table;
 	return result;
 }
