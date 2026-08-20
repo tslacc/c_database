@@ -1,17 +1,31 @@
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
+#include <errno.h>
 #include "lib_database.h"
-#define true 1
-#define false 0
-#define USERINPUTMAX 512
+
+
 
 struct Database *d;
-union{
-	int as_int;
-	char as_char[USERINPUTMAX];
-}u_in;
 
-void table_loop(){
+//Get single int
+int l_getint(){
+	char buf[64];
+	fgets(buf, 33, stdin);
+	if(errno!=0) while(getchar()!='\n'); //clear stdin
+	return atoi(buf);
+}
+void table_loop(struct Table *tb){
+	while(true){
+		printf("Selected table: %s\n", tb->name);
+		printf("1. Print entries\n");
+		printf("2. Add header\n");
+		printf("3. Delete header\n");
+		printf("4. Select record\n");
+		printf("5. Return to main db\n");
+		int foo = l_getint();
+		
+	}
 	return;
 }
 void main_loop(){
@@ -19,11 +33,11 @@ void main_loop(){
 		printf("1. Add table\n");
 		printf("2. Select table\n");
 		printf("3. Print all tables\n");
-		printf("0. Exit\n");
+		printf("4. Exit\n");
 		printf("enter choice\n");
-		fgets(u_in.as_char, USERINPUTMAX, stdin);
-		u_in.as_int = atoi(u_in.as_char);
-		switch(u_in.as_int){
+		int u_ch = l_getint();
+		printf("u_ch %d\n", u_ch);
+		switch(u_ch){
 			case 1:
 				//add table or ask user for input
 				break;
@@ -36,7 +50,7 @@ void main_loop(){
 					printf(d->tables[i]->name);
 				}
 				break;
-			case 0: 
+			case 4:
 				return;
 		}
 	}
