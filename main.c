@@ -34,13 +34,41 @@ int l_getint(){
 void table_loop(struct Table *tb){
 	while(true){
 		printf("Selected table: %s\n", tb->name);
-		printf("1. Print entries\n");
+		printf("1. Print all\n");
 		printf("2. Add header\n");
 		printf("3. Delete header\n");
 		printf("4. Select record\n");
 		printf("5. Return to main db\n");
-		int foo = l_getint();
-		
+		int u_ch = l_getint();
+		switch(u_ch){
+			case(1):
+				printf("\t");
+				for(int i = 0; i < tb->num_headers; i++){
+					printf("%s\t", tb->headers[i]);
+				}
+				printf("\n");
+				for(int i = 0; i < tb->num_records; i++){
+					printf("%s\t",tb->records[i]->name);
+					for(int j = 0; j < tb->num_headers; j++){
+						printf("%s\t", tb->records[i]->values[j].as_int);
+					}
+					printf("\n");
+				}
+				break;
+			case(2):
+				printf("Skipping request header\n");
+				break;
+			case(3):
+				printf("Header ID to remove:\n");
+				printf("Not yet implemented\n");
+				break;
+			case(4):
+				printf("Select record by num:\n");
+				printf("Not yet implemented\n");
+				break;
+			case(5):
+				return;
+		}
 	}
 	return;
 }

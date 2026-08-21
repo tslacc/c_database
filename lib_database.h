@@ -18,6 +18,7 @@ struct Database{
 	int (*fptr)(int);
 	struct Table * (*add_new_table)(struct Database *db, const char *_name);
 	int (*lookup_table_index)(const struct Database *db, const char *_name);
+
 };
 struct Table{
 	char *name;
@@ -29,6 +30,7 @@ struct Table{
 	int max_records;
 	struct Record * (*add_new_record)(struct Table *tb, const char *_name);
 	int (*lookup_record_index)(const struct Table *tb, const char *_name);
+	void (*remove_header)(int index);
 };
 struct Record{
 	char *name;
