@@ -58,7 +58,18 @@ struct Record *table_new_record(struct Table *tb, const char *_name){
 	return result;
 	
 }
-
+void remove_header(struct Table *tb, int pos){
+	free(tb->headers[pos]);
+	if(pos + 1 < tb->num_headers) { //There is a need to move data
+		memmove(tb->headers[pos], tb->headers[pos+1], sizeof(char **)*(tb->num_headers-pos));
+		for(int i = 0; i<tb->num_records; i++){
+			//free(tb->records[i]->values[pos]);
+			memmove(tb->records[i]->values+pos, tb->records[i]->values+pos+1, sizeof(union value)*(tb->num_headers-pos));	
+		}
+	}
+	tb->num_headers--;
+	return;
+}
 //Allocate a new table.
 static struct Table *new_table(const char *name){
 	struct Table *result = malloc(sizeof(struct Table));
@@ -70,6 +81,7 @@ static struct Table *new_table(const char *name){
 	result->records = malloc(sizeof(struct Record *)*result->max_records);
 	result->add_new_record = NULL;
 	result->lookup_record_index = NULL;
+	result->remove_header = remove_header;
 	return result;
 }
 

@@ -30,7 +30,7 @@ struct Table{
 	int max_records;
 	struct Record * (*add_new_record)(struct Table *tb, const char *_name);
 	int (*lookup_record_index)(const struct Table *tb, const char *_name);
-	void (*remove_header)(int index);
+	void (*remove_header)(struct Table *tb, int index);
 };
 struct Record{
 	char *name;
