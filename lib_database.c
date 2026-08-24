@@ -6,11 +6,38 @@
 const int RESIZE_SCALE = 2;
 
 //RECORDS	==========================================================================================================
+static char *record_to_bytes(const struct Record *rc, const int num_headers){
+	char *result = malloc(strlen(rc->name)+1+num_headers*sizeof(union value));
+	memcpy(result, rc->name, strlen(rc->name));
+	//Null terminate
+	*(result+strlen(rc->name)+1) = '\0';
+	//Copy the union values
+	memcpy(result+strlen(rc->name)+1+1, rc->values, num_headers*sizeof(union value));
+	return result;
+}
+static void record_from_bytes(struct Record *rc, const int num_headers, const char *data, const int data_length){
+	int idx = 0;
+	//Name length check
+	while(*(data+idx)!='\0'&&idx < data_length) idx++;
+	if(idx >= data_length) return;
+	free(rc->name);
+	//Copy in name and null terminate
+	rc->name = malloc(sizeof(char)*idx);
+	memcpy(rc->name, data, idx-1);
+	*(rc->name+idx) = '\0';
+	//Copy in values
+	free(rc->values);
+	rc->values = malloc(num_headers*sizeof(union value));
+	memcpy(rc->values, data+idx+1, num_headers*sizeof(union value));
+	return;
+};
 //Allocate a new record.
 //Do not populate any values except "name".
 static struct Record *new_record(const char *name){
 	struct Record *result = malloc(sizeof(struct Record));
 	memcpy(result->name, name, strlen(name));
+	result->to_bytes = record_to_bytes;
+	result->from_bytes = record_from_bytes;
 	return result;
 }
 
@@ -122,6 +149,7 @@ static struct Table *database_new_table(struct Database *db, const char *_name){
 	db->num_tables++;
 	return result;
 }
+void write_db_to_file();
 
 struct Database *new_db(){
 	struct Database *result = malloc(sizeof(struct Database));
@@ -133,5 +161,6 @@ struct Database *new_db(){
 	return result;
 }
 
+//WRITING TO FILE
 
 

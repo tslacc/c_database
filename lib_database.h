@@ -7,7 +7,12 @@ union value{
 	float as_float;
 	char as_char[sizeof(float)];
 };
-
+struct Record{
+	char *name;
+	union value *values;
+	char *(*to_bytes)(const struct Record*, const int num_headers);
+	void (*from_bytes)(const char*, const int num_headers, const char *data, const int data_length);
+};
 //Basic database containing a list of struct Record.
 //Each record contains exactly one name and one value.
 struct Database{
@@ -15,10 +20,10 @@ struct Database{
 	struct Table **tables;
 	int num_tables;
 	int max_tables;
-	int (*fptr)(int);
 	struct Table * (*add_new_table)(struct Database *db, const char *_name);
 	int (*lookup_table_index)(const struct Database *db, const char *_name);
-
+	void (*write_to_file)(const struct Database *db, const char *_path);
+	void (*read_from_file)(struct Database *db, const char *_path);
 };
 struct Table{
 	char *name;
@@ -32,11 +37,10 @@ struct Table{
 	int (*lookup_record_index)(const struct Table *tb, const char *_name);
 	void (*remove_header)(struct Table *tb, int index);
 };
-struct Record{
-	char *name;
-	union value *values;
-};
+
 struct Database *new_db();
+
+
 void debug_print();
 
 #endif
