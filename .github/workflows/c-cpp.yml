@@ -3,18 +3,12 @@ name: C/C++ CI
 on:
   push:
     branches: [ "main" ]
-  pull_request:
-    branches: [ "main" ]
-
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
-    steps:
-    
+    steps:    
     - uses: actions/checkout@v4
     - name: Install GCC
       uses: egor-tensin/setup-gcc@v2
     - name: Build Test
-      run: gcc main.c lib_database.c -o a.out
+      run: ./make-gcc
