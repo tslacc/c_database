@@ -11,7 +11,7 @@ struct Record{
 	char *name;
 	union value *values;
 	char *(*to_bytes)(const struct Record*, const int num_headers);
-	void (*from_bytes)(const char*, const int num_headers, const char *data, const int data_length);
+	void (*from_bytes)(struct Record*, const int num_headers, const char *data, const int data_length);
 };
 //Basic database containing a list of struct Record.
 //Each record contains exactly one name and one value.
