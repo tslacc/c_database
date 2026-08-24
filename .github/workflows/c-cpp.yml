@@ -11,4 +11,4 @@ jobs:
     - name: Install GCC
       uses: egor-tensin/setup-gcc@v2
     - name: Build Test
-      run: ./make-gcc
+      run: sh make-gcc
