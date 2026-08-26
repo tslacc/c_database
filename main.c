@@ -2,107 +2,24 @@
 #include <stdio.h>
 #include <stdbool.h>
 #include <errno.h>
+#include <string.h>
 #include "lib_database.h"
 
-
-
-struct Database *d;
-
-//Get single int
-int l_getint(){
-	char buf[64];
-	//Read at most 33 chars
-	int i = 0; 
-	int c = 0;
-	while(i<32 && (c=getc(stdin))!='\n'){
-		//printf("insert %d at %u\n", c, i);
-		buf[i] = c;
-		i++;
-	}
-	//printf("Not inserting char %d\n",c);
-	if(c!='\n') {
-		//printf("no endline reached. flush buffer\n");
-		while((c=getc(stdin))!='\n'){
-		//	printf("Read and discard c %d\n",c);
-		}
-		//printf("last c read is %d\n",c);
-		return -1;
-	}
-	buf[i]='\0';
-	return atoi(buf);
-}
-void table_loop(struct Table *tb){
-	while(true){
-		printf("Selected table: %s\n", tb->name);
-		printf("1. Print all\n");
-		printf("2. Add header\n");
-		printf("3. Delete header\n");
-		printf("4. Select record\n");
-		printf("5. Return to main db\n");
-		int u_ch = l_getint();
-		switch(u_ch){
-			case(1):
-				printf("\t");
-				for(int i = 0; i < tb->num_headers; i++){
-					printf("%s\t", tb->headers[i]);
-				}
-				printf("\n");
-				for(int i = 0; i < tb->num_records; i++){
-					printf("%s\t",tb->records[i]->name);
-					for(int j = 0; j < tb->num_headers; j++){
-						printf("%s\t", tb->records[i]->values[j].as_int);
-					}
-					printf("\n");
-				}
-				break;
-			case(2):
-				printf("Skipping request header\n");
-				break;
-			case(3):
-				printf("Header ID to remove:\n");
-				printf("Not yet implemented\n");
-				break;
-			case(4):
-				printf("Select record by num:\n");
-				printf("Not yet implemented\n");
-				break;
-			case(5):
-				return;
-		}
-	}
-	return;
-}
-void main_loop(){
-	while(true){
-		printf("1. Add table\n");
-		printf("2. Select table\n");
-		printf("3. Print all tables\n");
-		printf("4. Exit\n");
-		printf("enter choice\n");
-		int u_ch = l_getint();
-		printf("u_ch %d\n", u_ch);
-		switch(u_ch){
-			case 1:
-				//add table or ask user for input
-				break;
-			case 2:
-				//Select table and enter sub-loop
-				break;
-			case 3:
-				printf("List of tables n = %u\n", d->num_tables);
-				for(int i = 0; i < d->num_tables; i++){
-					printf(d->tables[i]->name);
-				}
-				break;
-			case 4:
-				return;
-		}
-	}
-	return;
-}
 int main(int argc, char * argv[]){	
-	d = new_db();
-	main_loop();
+	struct Record *rc = new_record();
+	rc->name = malloc(5);
+	memcpy(rc->name, "test\0", 5);
+	rc->values = malloc(sizeof(union value)*2);
+	rc->values[1].as_int = 2;
+	char *buffer = rc->to_bytes(rc, 2);
+	printf("Buf size %d\n", strlen(rc->name)+1+2*sizeof(union value));
+	debug_print_record(rc, 2);
+	debug_print_recordbytes(buffer, 2);
+	struct Record *rc2 = new_record_from_bytes(buffer, 2);
+	debug_print_record(rc2, 2);
+	char *buffer2 = rc2->to_bytes(rc2, 2);
+	debug_print_recordbytes(buffer2, 2);
+	printf("Parity check (1 is good) %u\n", debug_check_record_equality(rc, rc2, 2));
 	printf("End program\n");
 	return 0;
 }
