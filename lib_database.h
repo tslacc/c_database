@@ -18,4 +18,22 @@ struct Record *new_record_from_bytes(const char *data, const int num_headers);
 void debug_print_record(const struct Record*, const int num_headers);
 void debug_print_recordbytes(const char *buf, const int num_headers);
 int debug_check_record_equality(const struct Record* rc, const struct Record* rc2, const int num_headers);
+
+struct Table{
+	char *name;
+	char **headers;
+	int headers_used;
+	int headers_allocated;
+	struct Record **records;
+	int records_used;
+	int records_allocated;
+	void (*add_header)(const char *next_header);
+	char *(*to_bytes)(const struct Table);
+};
+struct Table *new_table(const int record_count, const int header_count);
+struct Table *new_table_from_bytes(const char *data, const int record_count, const int header_count);
+
+
+
+
 #endif

@@ -58,3 +58,14 @@ int debug_check_record_equality(const struct Record* rc, const struct Record* rc
 	}
 	return 1;
 }
+
+struct Table *new_table(const int record_count, const int header_count){
+	struct Table *result = malloc(sizeof(struct Table));
+	result->headers = malloc(sizeof(char *)*header_count);
+	result->headers_used = 0;
+	result->headers_allocated = header_count;
+	result->records = malloc(sizeof(struct Record)*record_count);
+	result->records_used = 0;
+	result->records_allocated = record_count;
+	return result;
+}
