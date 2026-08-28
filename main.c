@@ -21,5 +21,11 @@ int main(int argc, char * argv[]){
 	debug_print_recordbytes(buffer2, 2);
 	printf("Parity check (1 is good) %u\n", debug_check_record_equality(rc, rc2, 2));
 	printf("End program\n");
+	
+	struct Table *tb = new_table(1,1);
+	struct Record *rc3 = tb->make_record(tb);
+	rc3->name = malloc(5);
+	memcpy(rc3->name, "TEST\0", 5);
+	
 	return 0;
 }

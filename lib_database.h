@@ -28,10 +28,13 @@ struct Table{
 	int records_used;
 	int records_allocated;
 	void (*add_header)(const char *next_header);
-	char *(*to_bytes)(const struct Table);
+	struct Record *(*make_record)(struct Table *);
+	char *(*to_bytes)(const struct Table *);
 };
 struct Table *new_table(const int record_count, const int header_count);
 struct Table *new_table_from_bytes(const char *data, const int record_count, const int header_count);
+
+
 
 
 

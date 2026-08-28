@@ -58,7 +58,21 @@ int debug_check_record_equality(const struct Record* rc, const struct Record* rc
 	}
 	return 1;
 }
-
+static void table_expand(struct Table *tb){
+	tb->records_allocated *= RESIZE_SCALE;
+	tb->records = realloc(tb->records, sizeof(struct Record)*tb->records_allocated);
+	return;
+}
+static struct Record *table_make_record(struct Table *tb){
+	struct Record *result = new_record();
+	if(tb->records_used >= tb->records_allocated){
+		table_expand(tb);
+	}
+	tb->records[tb->records_used] = result;
+	tb->records_used++;
+	return result;
+	
+}
 struct Table *new_table(const int record_count, const int header_count){
 	struct Table *result = malloc(sizeof(struct Table));
 	result->headers = malloc(sizeof(char *)*header_count);
@@ -67,5 +81,6 @@ struct Table *new_table(const int record_count, const int header_count){
 	result->records = malloc(sizeof(struct Record)*record_count);
 	result->records_used = 0;
 	result->records_allocated = record_count;
+	result->make_record = table_make_record;
 	return result;
 }
