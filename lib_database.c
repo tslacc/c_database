@@ -69,9 +69,13 @@ static struct Record *table_make_record(struct Table *tb){
 		table_expand(tb);
 	}
 	tb->records[tb->records_used] = result;
+	result->values = malloc(sizeof(union value)*tb->headers_used);
 	tb->records_used++;
 	return result;
 	
+}
+static char *table_to_bytes(const struct Table *tb){
+	return NULL;
 }
 struct Table *new_table(const int record_count, const int header_count){
 	struct Table *result = malloc(sizeof(struct Table));
@@ -82,5 +86,6 @@ struct Table *new_table(const int record_count, const int header_count){
 	result->records_used = 0;
 	result->records_allocated = record_count;
 	result->make_record = table_make_record;
+	result->to_bytes = table_to_bytes;
 	return result;
 }
