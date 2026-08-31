@@ -6,9 +6,13 @@
 const int RESIZE_SCALE = 2;
 
 //RECORDS	==========================================================================================================
+//Helper function to return the size of the byte record
+static int sizeof_record_bytes(const struct Record *rc, const int num_headers){
+	return strlen(rc->name)+1+num_headers*sizeof(union value);
+}
 
 static char *record_to_bytes(const struct Record *rc, const int num_headers){
-	char *result = malloc(strlen(rc->name)+1+num_headers*sizeof(union value));
+	char *result = malloc(sizeof_record_bytes(rc, num_headers));
 	memcpy(result, rc->name, strlen(rc->name));
 	//Null terminate
 	*(result+strlen(rc->name)+1) = '\0';
@@ -74,8 +78,58 @@ static struct Record *table_make_record(struct Table *tb){
 	return result;
 	
 }
+static int sizeof_table_bytes(const struct Table* tb){
+	int sum = 0;
+	sum += strlen(tb->name)+1;
+	sum += sizeof(unsigned int);
+	for(int i = 0; i<tb->headers_used; i++){
+		sum += strlen(tb->headers[i])+1;
+	}
+	sum += sizeof(tb->records_used);
+	for(int i = 0; i<tb->records_used; i++){
+		sum += sizeof(unsigned int);
+		sum += sizeof_record_bytes(tb->records[i], tb->headers_used);
+	}	
+	return sum;
+}
 static char *table_to_bytes(const struct Table *tb){
-	return NULL;
+	union{
+		unsigned int as_int;
+		char as_char[sizeof(int)];
+	} int_convert;
+	char *result = malloc(sizeof_table_bytes(tb));
+	memset(result, 0, sizeof_table_bytes(tb));
+	int idx = 0;
+	memcpy(result+idx, tb->name, strlen(tb->name));
+	idx += strlen(tb->name);
+	*(result+idx) = 0;
+	idx += 1;
+	//write num headers
+	int_convert.as_int = tb->headers_used;
+	memcpy(result+idx, int_convert.as_char, sizeof(int));
+	idx+=sizeof(tb->headers_used);	
+	for(int i = 0; i < tb->headers_used; i++){
+		memcpy(result+idx, (tb->headers)+i, strlen(*(tb->headers+i)));
+		idx += strlen(*(tb->headers+i));
+		*(result+idx) = 0;
+		idx += 1;
+	}
+	//write num records
+	int_convert.as_int = tb->records_used;
+	memcpy(result+idx, int_convert.as_char, sizeof(unsigned int));
+	idx+=sizeof(unsigned int);
+	for(int i = 0; i < tb->records_used; i++){
+		int sz_next_record = sizeof_record_bytes(tb->records[i], tb->headers_used);
+		int_convert.as_int = sz_next_record;
+		memcpy(result+idx, int_convert.as_char, sizeof(int));
+		idx += sizeof(int);
+		
+		char *tmp_char = tb->records[i]->to_bytes(tb->records[i], tb->headers_used);
+		memcpy(result+idx, tmp_char, sz_next_record);
+		free(tmp_char);
+		idx += sz_next_record;
+	}
+	return result;
 }
 struct Table *new_table(const int record_count, const int header_count){
 	struct Table *result = malloc(sizeof(struct Table));
