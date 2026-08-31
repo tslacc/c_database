@@ -80,7 +80,11 @@ static struct Record *table_make_record(struct Table *tb){
 }
 static int sizeof_table_bytes(const struct Table* tb){
 	int sum = 0;
-	sum += strlen(tb->name)+1;
+	if(tb->name == NULL){
+		sum += 1;
+	} else {
+		sum += strlen(tb->name)+1;
+	}
 	sum += sizeof(unsigned int);
 	for(int i = 0; i<tb->headers_used; i++){
 		sum += strlen(tb->headers[i])+1;
@@ -100,10 +104,15 @@ static char *table_to_bytes(const struct Table *tb){
 	char *result = malloc(sizeof_table_bytes(tb));
 	memset(result, 0, sizeof_table_bytes(tb));
 	int idx = 0;
-	memcpy(result+idx, tb->name, strlen(tb->name));
-	idx += strlen(tb->name);
-	*(result+idx) = 0;
-	idx += 1;
+	if(tb->name == NULL){
+		*(result+idx) = 0;
+		idx+=1;
+	} else {
+		memcpy(result+idx, tb->name, strlen(tb->name));
+		idx += strlen(tb->name);
+		*(result+idx) = 0;
+		idx += 1;
+	}
 	//write num headers
 	int_convert.as_int = tb->headers_used;
 	memcpy(result+idx, int_convert.as_char, sizeof(int));
@@ -133,6 +142,7 @@ static char *table_to_bytes(const struct Table *tb){
 }
 struct Table *new_table(const int record_count, const int header_count){
 	struct Table *result = malloc(sizeof(struct Table));
+	result->name = malloc(sizeof(char));
 	result->headers = malloc(sizeof(char *)*header_count);
 	result->headers_used = 0;
 	result->headers_allocated = header_count;
