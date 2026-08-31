@@ -25,7 +25,7 @@ struct Table{
 	int headers_used;
 	int headers_allocated;
 	struct Record **records;
-	int records_used;
+	int records_stored;
 	int records_allocated;
 	void (*add_header)(const char *next_header);
 	struct Record *(*make_record)(struct Table *);
