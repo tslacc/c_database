@@ -80,8 +80,17 @@ static int sizeof_table_bytes(const struct Table* tb){
 	}	
 	return sum;
 }
+static void table_allocate_new_headers(struct Table *tb, const int amount){
+	if(tb->headers_used+amount > tb->headers_allocated){
+		while(tb->headers_used+amount > tb->headers_allocated)
+			tb->headers_allocated *= RESIZE_SCALE;
+		tb->headers = realloc(tb->headers, tb->headers_allocated*sizeof(char*));
+	}
+	tb->headers_used += amount;
+	return;
+}
 static struct Record *table_make_record(struct Table *tb){
-	struct Record *result = malloc(sizeof(struct Record));
+	struct Record *result = new_record();
 	if(tb->records_stored == tb->records_allocated){
 		if(tb->records_allocated == 0)
 			tb->records_allocated = 1;
@@ -146,6 +155,7 @@ struct Table *new_table(const int record_count, const int header_count){
 	result->records = malloc(sizeof(struct Record)*record_count);
 	result->records_stored = 0;
 	result->records_allocated = record_count;
+	result->allocate_new_headers = table_allocate_new_headers;
 	result->make_record = table_make_record;
 	result->to_bytes = table_to_bytes;
 	return result;
