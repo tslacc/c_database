@@ -160,3 +160,13 @@ struct Table *new_table(const int record_count, const int header_count){
 	result->to_bytes = table_to_bytes;
 	return result;
 }
+
+//Database ==================================================================
+
+struct Database *new_database(const int tables_to_allocate){
+	struct Database *result = malloc(sizeof(struct Database));
+	result->tables_stored = 0;
+	result->tables_allocated = tables_to_allocate;
+	result->tables = malloc(tables_to_allocate*sizeof(struct Table*));
+	return result;
+}
