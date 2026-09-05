@@ -62,6 +62,8 @@ int debug_check_record_equality(const struct Record* rc, const struct Record* rc
 	}
 	return 1;
 }
+
+// TABLE ===============================================================================================================================================
 static int sizeof_table_bytes(const struct Table* tb){
 	int sum = 0;
 	if(tb->name == NULL){
@@ -162,11 +164,38 @@ struct Table *new_table(const int record_count, const int header_count){
 }
 
 //Database ==================================================================
-
+static unsigned int sizeof_database_bytes(const struct Database *db){
+	unsigned int result = 0;
+	for (int i = 0; i < db->tables_stored; i++){
+		result += sizeof(unsigned int);
+		result += sizeof_table_bytes(db->tables[i]);
+	}
+	return result;
+}
+char *database_to_bytes(const struct Database *db){
+	union{
+		unsigned int as_int;
+		char as_char[sizeof(int)];
+	} int_convert;
+	char *result = malloc(sizeof_database_bytes(db));
+	int idx = 0;
+	for (int i = 0; i < db->tables_stored; i++) {
+		int_convert.as_int = sizeof_table_bytes(db->tables[i]);
+		memcpy(result+idx, int_convert.as_char, sizeof(unsigned int));
+		idx += sizeof(unsigned int);
+		
+		char *tmp_char = db->tables[i]->to_bytes(db->tables[i]);
+		memcpy(result+idx, tmp_char, int_convert.as_int);
+		idx += int_convert.as_int;
+		free(tmp_char);
+	}
+	return result;
+}
 struct Database *new_database(const int tables_to_allocate){
 	struct Database *result = malloc(sizeof(struct Database));
 	result->tables_stored = 0;
 	result->tables_allocated = tables_to_allocate;
 	result->tables = malloc(tables_to_allocate*sizeof(struct Table*));
+	result->to_bytes = database_to_bytes;
 	return result;
 }
