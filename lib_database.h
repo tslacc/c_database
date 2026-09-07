@@ -21,7 +21,7 @@ int debug_check_record_equality(const struct Record* rc, const struct Record* rc
 struct Table{
 	char *name;
 	char **headers;
-	int headers_used;
+	int headers_stored;
 	int headers_allocated;
 	struct Record **records;
 	int records_stored;
@@ -30,14 +30,12 @@ struct Table{
 	struct Record *(*make_record)(struct Table *);
 	char *(*to_bytes)(const struct Table *);
 };
-struct Table *new_table(const int record_count, const int header_count);
-struct Table *new_table_from_bytes(const char *data, const int record_count, const int header_count);
 
 struct Database{
 	struct Table **tables;
 	int tables_stored;
 	int tables_allocated;
-	struct Table *(*make_new_table)(struct Database *db);
+	struct Table *(*make_new_table)(struct Database *db, const int tables_to_allocate);
 	char *(*to_bytes)(const struct Database *);
 };
 
