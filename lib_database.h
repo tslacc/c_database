@@ -40,6 +40,8 @@ struct Database{
 };
 
 struct Database *new_database(const int tables_to_allocate);
-
+int record_equality(const struct Record *rc1, const struct Record *rc2, const int value_count);
+int table_equality(const struct Table *tb1, const struct Table *tb2);
+int database_equality(const struct Database *db1, const struct Database *db2);
 
 #endif

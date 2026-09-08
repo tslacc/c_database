@@ -3,6 +3,7 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <stdio.h>
+#include <stdbool.h>
 const int RESIZE_SCALE = 2;
 
 //RECORDS	==========================================================================================================
@@ -220,4 +221,20 @@ struct Database *new_database(const int tables_to_allocate){
 	result->tables = malloc(tables_to_allocate*sizeof(struct Table*));
 	result->to_bytes = database_to_bytes;
 	return result;
+}
+
+int record_equality(const struct Record *rc1, const struct Record *rc2, const int value_count){
+	if(strcmp(rc1->name, rc2->name)) return false;
+	for(int i = 0; i < value_count; i++) 
+		if(rc1->values[i].as_int!=rc2->values[i].as_int)
+			return false;
+	return true;
+}
+
+int table_equality(const struct Table *tb1, const struct Table *tb2){
+	return true;
+}
+
+int database_equality(const struct Database *db1, const struct Database *db2){
+	return true;
 }
