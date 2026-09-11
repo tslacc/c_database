@@ -224,6 +224,7 @@ struct Database *new_database(const int tables_to_allocate){
 }
 
 int record_equality(const struct Record *rc1, const struct Record *rc2, const int value_count){
+	if((rc1 == NULL || rc2 == NULL) && rc1 != rc2) return false;
 	if(strcmp(rc1->name, rc2->name)) return false;
 	for(int i = 0; i < value_count; i++) 
 		if(rc1->values[i].as_int!=rc2->values[i].as_int)
@@ -232,9 +233,19 @@ int record_equality(const struct Record *rc1, const struct Record *rc2, const in
 }
 
 int table_equality(const struct Table *tb1, const struct Table *tb2){
+	if((tb2 == NULL || tb2 == NULL) && tb2 != tb2) return false;
+	if(strcmp(tb1->name, tb2->name)) return false;
+	if(tb1->headers_stored!=tb2->headers_stored) return false;
+	if(tb1->records_stored!=tb2->records_stored) return false;
+	for(int i = 0; i < tb1->records_stored; i++)
+		if(record_equality(tb1->records[i], tb2->records[i], tb1->headers_stored)) return false;
 	return true;
 }
 
 int database_equality(const struct Database *db1, const struct Database *db2){
+	if((db1 == NULL || db1 == NULL) && db2 != db2) return false;
+	if(db1->tables_stored!=db2->tables_stored) return false;
+	for(int i = 0; i < db1->tables_stored; i++)
+		if(table_equality(db1->tables[i], db2->tables[i])) return false;
 	return true;
 }
