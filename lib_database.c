@@ -22,21 +22,20 @@ static char *record_to_bytes(const struct Record *rc, const int num_headers){
 	return result;
 }
 //Allocate a new record.
-//Do not populate any values except "name".
-static struct Record *new_record(void){
+static struct Record *new_record(const int num_headers){
 	struct Record *result = malloc(sizeof(struct Record));
+	result->values = malloc(sizeof(union value)*num_headers);
 	return result;
 }
 static struct Record *new_record_from_bytes(const char *data, const int num_headers){
 	int idx = 0;
 	//Name length check (null terminated)
 	while(*(data+idx)!='\0') idx++;
-	struct Record *rc = new_record();
+	struct Record *rc = new_record(num_headers);
 	rc->name = malloc(idx);
 	memcpy(rc->name, data, idx);
 	idx++;
 	//Copy in values
-	rc->values = malloc(num_headers*sizeof(union value));
 	memcpy(rc->values, data+idx+1, num_headers*sizeof(union value));
 	return rc;
 };
@@ -81,28 +80,6 @@ int sizeof_table_bytes(const struct Table* tb){
 		sum += sizeof_record_bytes(tb->records[i], tb->headers_stored);
 	}	
 	return sum;
-}
-static void table_allocate_new_headers(struct Table *tb, const int amount){
-	if(tb->headers_stored+amount > tb->headers_allocated){
-		while(tb->headers_stored+amount > tb->headers_allocated)
-			tb->headers_allocated *= RESIZE_SCALE;
-		tb->headers = realloc(tb->headers, tb->headers_allocated*sizeof(char*));
-	}
-	tb->headers_stored += amount;
-	return;
-}
-static struct Record *table_make_record(struct Table *tb){
-	struct Record *result = new_record();
-	if(tb->records_stored == tb->records_allocated){
-		if(tb->records_allocated == 0)
-			tb->records_allocated = 1;
-		else
-			tb->records_allocated *= RESIZE_SCALE;
-		tb->records = realloc(tb->records, sizeof(char*)*tb->records_allocated);
-	}
-	tb->records[tb->records_stored] = result;
-	tb->records_stored++;
-	return result;
 }
 static char *table_to_bytes(const struct Table *tb){
 	union{
@@ -174,7 +151,30 @@ static struct Table *new_table(const int record_count, const int header_count){
 	result->records_allocated = record_count;
 	return result;
 }
-
+void table_alloc_new_records(struct Table *tb, const int num){
+	if(tb->records_stored + num > tb->records_allocated)
+		while(tb->records_stored + num > tb->records_allocated){
+			tb->records_allocated*=RESIZE_SCALE;
+		}
+		tb->records = realloc(tb->records, sizeof(struct Record *)*(tb->records_stored+num));
+	for(int i = 0; i < num; i++){
+		tb->records[tb->records_stored+i] = new_record(tb->headers_stored);
+	}
+	tb->headers_stored += num;
+	return;
+}
+void table_alloc_new_headers(struct Table *tb, const int num){
+	if(tb->headers_stored + num > tb->headers_allocated)
+		while(tb->headers_stored + num > tb->headers_allocated){
+			tb->headers_allocated*=RESIZE_SCALE;
+		}
+		tb->headers = realloc(tb->headers, sizeof(char *)*(tb->headers_stored+num));
+	for(int i = 0; i < num; i++){
+		tb->headers[tb->headers_stored+i] = NULL;
+	}
+	tb->headers_stored += num;
+	return;
+}
 //Database ==================================================================
 static unsigned int sizeof_database_bytes(const struct Database *db){
 	unsigned int result = 0;

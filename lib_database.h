@@ -30,7 +30,8 @@ struct Database{
 	int tables_stored;
 	int tables_allocated;
 };
-
+void table_alloc_new_records(struct Table *tb, const int num);
+void table_alloc_new_headers(struct Table *tb, const int num);
 void database_alloc_new_tables(struct Database *db, const int tables_to_allocate);
 struct Database *new_database(const int tables_to_allocate);
 int record_equality(const struct Record *rc1, const struct Record *rc2, const int value_count);
