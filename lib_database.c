@@ -23,12 +23,11 @@ static char *record_to_bytes(const struct Record *rc, const int num_headers){
 }
 //Allocate a new record.
 //Do not populate any values except "name".
-struct Record *new_record(void){
+static struct Record *new_record(void){
 	struct Record *result = malloc(sizeof(struct Record));
-	result->to_bytes = record_to_bytes;
 	return result;
 }
-struct Record *new_record_from_bytes(const char *data, const int num_headers){
+static struct Record *new_record_from_bytes(const char *data, const int num_headers){
 	int idx = 0;
 	//Name length check (null terminated)
 	while(*(data+idx)!='\0') idx++;
@@ -65,7 +64,7 @@ int debug_check_record_equality(const struct Record* rc, const struct Record* rc
 }
 
 // TABLE ===============================================================================================================================================
-static int sizeof_table_bytes(const struct Table* tb){
+int sizeof_table_bytes(const struct Table* tb){
 	int sum = 0;
 	if(tb->name == NULL){
 		sum += 1;
@@ -142,7 +141,7 @@ static char *table_to_bytes(const struct Table *tb){
 		memcpy(result+idx, int_convert.as_char, sizeof(int));
 		idx += sizeof(int);
 		
-		char *tmp_char = tb->records[i]->to_bytes(tb->records[i], tb->headers_stored);
+		char *tmp_char = record_to_bytes(tb->records[i], tb->headers_stored);
 		memcpy(result+idx, tmp_char, sz_next_record);
 		free(tmp_char);
 		idx += sz_next_record;
@@ -162,10 +161,6 @@ static struct Table *new_table_noargs(void){
 	result->records_stored = 0;
 	result->records = malloc(0);
 
-	result->allocate_new_headers = table_allocate_new_headers;
-	result->make_record = table_make_record;
-	result->to_bytes = table_to_bytes;
-
 	return result;
 }
 static struct Table *new_table(const int record_count, const int header_count){
@@ -177,9 +172,6 @@ static struct Table *new_table(const int record_count, const int header_count){
 	result->records = malloc(sizeof(struct Record)*record_count);
 	result->records_stored = 0;	
 	result->records_allocated = record_count;
-	result->allocate_new_headers = table_allocate_new_headers;
-	result->make_record = table_make_record;
-	result->to_bytes = table_to_bytes;
 	return result;
 }
 
@@ -204,12 +196,26 @@ char *database_to_bytes(const struct Database *db){
 		memcpy(result+idx, int_convert.as_char, sizeof(unsigned int));
 		idx += sizeof(unsigned int);
 		
-		char *tmp_char = db->tables[i]->to_bytes(db->tables[i]);
+		char *tmp_char = table_to_bytes(db->tables[i]);
 		memcpy(result+idx, tmp_char, int_convert.as_int);
 		idx += int_convert.as_int;
 		free(tmp_char);
 	}
 	return result;
+}
+
+//Allocate new table of size 0,0
+void database_alloc_new_tables(struct Database *db, const int num_to_add){
+	if(db->tables_stored + num_to_add > db->tables_allocated)
+		while(db->tables_stored + num_to_add > db->tables_allocated){
+			db->tables_allocated*=RESIZE_SCALE;
+		}
+		db->tables = realloc(db->tables, sizeof(struct Table*)*(db->tables_stored+num_to_add));
+	for(int i = 0; i < num_to_add; i++){
+		db->tables[db->tables_stored+i] = new_table(0,0);
+	}
+	db->tables_stored += num_to_add;
+	return;
 }
 struct Database *new_database(const int tables_to_allocate){
 	struct Database *result = malloc(sizeof(struct Database));
@@ -219,7 +225,6 @@ struct Database *new_database(const int tables_to_allocate){
 		result->tables[i] = new_table_noargs();
 	}
 	result->tables = malloc(tables_to_allocate*sizeof(struct Table*));
-	result->to_bytes = database_to_bytes;
 	return result;
 }
 

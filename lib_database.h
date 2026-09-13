@@ -10,10 +10,7 @@ union value{
 struct Record{
 	char *name;
 	union value *values;
-	char *(*to_bytes)(const struct Record*, const int num_headers);
 };
-struct Record *new_record(void);
-struct Record *new_record_from_bytes(const char *data, const int num_headers);
 void debug_print_record(const struct Record*, const int num_headers);
 void debug_print_recordbytes(const char *buf, const int num_headers);
 int debug_check_record_equality(const struct Record* rc, const struct Record* rc2, const int num_headers);
@@ -26,19 +23,15 @@ struct Table{
 	struct Record **records;
 	int records_stored;
 	int records_allocated;
-	void (*allocate_new_headers)(struct Table *tb, const int amount);
-	struct Record *(*make_record)(struct Table *);
-	char *(*to_bytes)(const struct Table *);
 };
 
 struct Database{
 	struct Table **tables;
 	int tables_stored;
 	int tables_allocated;
-	struct Table *(*make_new_table)(struct Database *db, const int tables_to_allocate);
-	char *(*to_bytes)(const struct Database *);
 };
 
+void database_alloc_new_tables(struct Database *db, const int tables_to_allocate);
 struct Database *new_database(const int tables_to_allocate);
 int record_equality(const struct Record *rc1, const struct Record *rc2, const int value_count);
 int table_equality(const struct Table *tb1, const struct Table *tb2);
