@@ -1,0 +1,256 @@
+#include "lib_database.h"
+#include <string.h>
+#include <stddef.h>
+#include <stdlib.h>
+#include <stdio.h>
+#include <stdbool.h>
+const int RESIZE_SCALE = 2;
+
+//RECORDS	==========================================================================================================
+//Helper function to return the size of the byte record
+static int sizeof_record_bytes(const struct Record *rc, const int num_headers){
+	return strlen(rc->name)+1+num_headers*sizeof(union value);
+}
+
+static char *record_to_bytes(const struct Record *rc, const int num_headers){
+	char *result = malloc(sizeof_record_bytes(rc, num_headers));
+	memcpy(result, rc->name, strlen(rc->name));
+	//Null terminate
+	*(result+strlen(rc->name)+1) = '\0';
+	//Copy the union values
+	memcpy(result+strlen(rc->name)+1+1, rc->values, num_headers*sizeof(union value));
+	return result;
+}
+//Allocate a new record.
+static struct Record *new_record(const int num_headers){
+	struct Record *result = malloc(sizeof(struct Record));
+	result->values = malloc(sizeof(union value)*num_headers);
+	return result;
+}
+static struct Record *new_record_from_bytes(const char *data, const int num_headers){
+	int idx = 0;
+	//Name length check (null terminated)
+	while(*(data+idx)!='\0') idx++;
+	struct Record *rc = new_record(num_headers);
+	rc->name = malloc(idx);
+	memcpy(rc->name, data, idx);
+	idx++;
+	//Copy in values
+	memcpy(rc->values, data+idx+1, num_headers*sizeof(union value));
+	return rc;
+};
+void debug_print_record(const struct Record* rc, const int num_headers){
+	printf("%p %s\nValues:", rc, rc->name);
+	for (int i = 0; i<num_headers; i++){
+		printf("\n\t%d", *(rc->values+i));
+	}
+	printf("\n");
+}
+void debug_print_recordbytes(const char *buf, const int num_headers){
+	int max = strlen(buf)+1+num_headers*sizeof(union value);
+	int i = 0;
+	for (; i<max; i++){
+		printf("%d ", *(buf+i));
+	}
+	printf("\n");
+}
+int debug_check_record_equality(const struct Record* rc, const struct Record* rc2, const int num_headers){
+	if(strcmp(rc->name,rc2->name)!=0) return 0;
+	for(int i = 0; i<num_headers; i++){
+		if(rc->values[i].as_float!=rc2->values[i].as_float) return 0;
+	}
+	return 1;
+}
+
+// TABLE ===============================================================================================================================================
+int sizeof_table_bytes(const struct Table* tb){
+	int sum = 0;
+	if(tb->name == NULL){
+		sum += 1;
+	} else {
+		sum += strlen(tb->name)+1;
+	}
+	sum += sizeof(unsigned int);
+	for(int i = 0; i<tb->headers_stored; i++){
+		sum += strlen(tb->headers[i])+1;
+	}
+	sum += sizeof(tb->records_stored);
+	for(int i = 0; i<tb->records_stored; i++){
+		sum += sizeof(unsigned int);
+		sum += sizeof_record_bytes(tb->records[i], tb->headers_stored);
+	}	
+	return sum;
+}
+static char *table_to_bytes(const struct Table *tb){
+	union{
+		unsigned int as_int;
+		char as_char[sizeof(int)];
+	} int_convert;
+	char *result = malloc(sizeof_table_bytes(tb));
+	memset(result, 0, sizeof_table_bytes(tb));
+	int idx = 0;
+	if(tb->name == NULL){
+		*(result+idx) = 0;
+		idx+=1;
+	} else {
+		memcpy(result+idx, tb->name, strlen(tb->name));
+		idx += strlen(tb->name);
+		*(result+idx) = 0;
+		idx += 1;
+	}
+	//write num headers
+	int_convert.as_int = tb->headers_stored;
+	memcpy(result+idx, int_convert.as_char, sizeof(int));
+	idx+=sizeof(tb->headers_stored);	
+	for(int i = 0; i < tb->headers_stored; i++){
+		memcpy(result+idx, (tb->headers)+i, strlen(*(tb->headers+i)));
+		idx += strlen(*(tb->headers+i));
+		*(result+idx) = 0;
+		idx += 1;
+	}
+	//write num records
+	int_convert.as_int = tb->records_stored;
+	memcpy(result+idx, int_convert.as_char, sizeof(unsigned int));
+	idx+=sizeof(unsigned int);
+	for(int i = 0; i < tb->records_stored; i++){
+		int sz_next_record = sizeof_record_bytes(tb->records[i], tb->headers_stored);
+		int_convert.as_int = sz_next_record;
+		memcpy(result+idx, int_convert.as_char, sizeof(int));
+		idx += sizeof(int);
+		
+		char *tmp_char = record_to_bytes(tb->records[i], tb->headers_stored);
+		memcpy(result+idx, tmp_char, sz_next_record);
+		free(tmp_char);
+		idx += sz_next_record;
+	}
+	return result;
+}
+
+static struct Table *new_table_noargs(void){
+	struct Table *result = malloc(sizeof(struct Table));
+	result->name = malloc(sizeof(char));
+
+	result->headers_allocated = 0;
+	result->headers_stored = 0;
+	result->headers = malloc(0);
+
+	result->records_allocated = 0;
+	result->records_stored = 0;
+	result->records = malloc(0);
+
+	return result;
+}
+static struct Table *new_table(const int record_count, const int header_count){
+	struct Table *result = malloc(sizeof(struct Table));
+	result->name = malloc(sizeof(char));
+	result->headers_allocated = header_count;
+	result->headers = malloc(sizeof(char *)*result->headers_allocated);
+	result->headers_stored = 0;
+	result->records = malloc(sizeof(struct Record)*record_count);
+	result->records_stored = 0;	
+	result->records_allocated = record_count;
+	return result;
+}
+void table_alloc_new_records(struct Table *tb, const int num){
+	if(tb->records_stored + num > tb->records_allocated)
+		while(tb->records_stored + num > tb->records_allocated){
+			tb->records_allocated*=RESIZE_SCALE;
+		}
+		tb->records = realloc(tb->records, sizeof(struct Record *)*(tb->records_stored+num));
+	for(int i = 0; i < num; i++){
+		tb->records[tb->records_stored+i] = new_record(tb->headers_stored);
+	}
+	tb->headers_stored += num;
+	return;
+}
+void table_alloc_new_headers(struct Table *tb, const int num){
+	if(tb->headers_stored + num > tb->headers_allocated)
+		while(tb->headers_stored + num > tb->headers_allocated){
+			tb->headers_allocated*=RESIZE_SCALE;
+		}
+		tb->headers = realloc(tb->headers, sizeof(char *)*(tb->headers_stored+num));
+	for(int i = 0; i < num; i++){
+		tb->headers[tb->headers_stored+i] = NULL;
+	}
+	tb->headers_stored += num;
+	return;
+}
+//Database ==================================================================
+static unsigned int sizeof_database_bytes(const struct Database *db){
+	unsigned int result = 0;
+	for (int i = 0; i < db->tables_stored; i++){
+		result += sizeof(unsigned int);
+		result += sizeof_table_bytes(db->tables[i]);
+	}
+	return result;
+}
+char *database_to_bytes(const struct Database *db){
+	union{
+		unsigned int as_int;
+		char as_char[sizeof(int)];
+	} int_convert;
+	char *result = malloc(sizeof_database_bytes(db));
+	int idx = 0;
+	for (int i = 0; i < db->tables_stored; i++) {
+		int_convert.as_int = sizeof_table_bytes(db->tables[i]);
+		memcpy(result+idx, int_convert.as_char, sizeof(unsigned int));
+		idx += sizeof(unsigned int);
+		
+		char *tmp_char = table_to_bytes(db->tables[i]);
+		memcpy(result+idx, tmp_char, int_convert.as_int);
+		idx += int_convert.as_int;
+		free(tmp_char);
+	}
+	return result;
+}
+
+//Allocate new table of size 0,0
+void database_alloc_new_tables(struct Database *db, const int num_to_add){
+	if(db->tables_stored + num_to_add > db->tables_allocated)
+		while(db->tables_stored + num_to_add > db->tables_allocated){
+			db->tables_allocated*=RESIZE_SCALE;
+		}
+		db->tables = realloc(db->tables, sizeof(struct Table*)*(db->tables_stored+num_to_add));
+	for(int i = 0; i < num_to_add; i++){
+		db->tables[db->tables_stored+i] = new_table(0,0);
+	}
+	db->tables_stored += num_to_add;
+	return;
+}
+struct Database *new_database(const int tables_to_allocate){
+	struct Database *result = malloc(sizeof(struct Database));
+	result->tables_stored = 0;
+	result->tables_allocated = tables_to_allocate;
+	for(int i = 0; i < tables_to_allocate; i++){
+		result->tables[i] = new_table_noargs();
+	}
+	result->tables = malloc(tables_to_allocate*sizeof(struct Table*));
+	return result;
+}
+
+int record_equality(const struct Record *rc1, const struct Record *rc2, const int value_count){
+	if((rc1 == NULL || rc2 == NULL) && rc1 != rc2) return false;
+	if(strcmp(rc1->name, rc2->name)) return false;
+	for(int i = 0; i < value_count; i++) 
+		if(rc1->values[i].as_int!=rc2->values[i].as_int)
+			return false;
+	return true;
+}
+
+int table_equality(const struct Table *tb1, const struct Table *tb2){
+	if((tb2 == NULL || tb2 == NULL) && tb2 != tb2) return false;
+	if(strcmp(tb1->name, tb2->name)) return false;
+	if(tb1->headers_stored!=tb2->headers_stored) return false;
+	if(tb1->records_stored!=tb2->records_stored) return false;
+	for(int i = 0; i < tb1->records_stored; i++)
+		if(record_equality(tb1->records[i], tb2->records[i], tb1->headers_stored)) return false;
+	return true;
+}
+
+int database_equality(const struct Database *db1, const struct Database *db2){
+	if((db1 == NULL || db1 == NULL) && db2 != db2) return false;
+	if(db1->tables_stored!=db2->tables_stored) return false;
+	for(int i = 0; i < db1->tables_stored; i++)
+		if(table_equality(db1->tables[i], db2->tables[i])) return false;
+	return true;
+}
