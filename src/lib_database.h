@@ -20,6 +20,7 @@ struct Database{
 	struct Relation **relations;
 	int relationsUsed;
 	int relationsAllocated;
+	void (*makeRelation)(struct Database *const db, const char *name, const uint32_t numFields);
 };
 struct Database *newDatabase(void);
 

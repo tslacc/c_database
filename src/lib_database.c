@@ -20,16 +20,17 @@ static struct Relation *newRelation(const char *name, const uint32_t numFields){
 	return result;
 }
 
-struct Database *newDatabase(void){
-	struct Database *result = malloc(sizeof(struct Database));
-	return result;
-}
-
-static void DatabaseMakeRelation(struct Database *db, const char *name, const uint32_t numFields){
+static void dbmakerelation(struct Database *const db, const char *name, const uint32_t numFields){
 	struct Relation *result = newRelation(name, numFields);
 	db->relationsAllocated++;
-	
 	db->relations = realloc(db->relations, sizeof(struct Relation *));
 	*(db->relations+db->relationsUsed) = result;
 	db->relationsUsed++;
 }
+
+struct Database *newDatabase(void){
+	struct Database *result = malloc(sizeof(struct Database));
+	result->makeRelation = dbmakerelation;
+	return result;
+}
+

@@ -13,6 +13,7 @@ struct Operand{
 };
 struct View{
 	struct Database *selectedDB;
+	struct Relation *selectedRelation;
 	int *selectedRows;
 	int numSelectedRows;
 	int *selectedColumns;
@@ -23,4 +24,4 @@ struct DBController{
 	struct View *currentView;	
 };
 struct DBController *newDBController(struct Database *currentDB);
-void parseStringCommand(const char *cmd, const int cmdsz);
+void parseStringCommand(struct DBController *const db, const char *cmd, const int cmdsz);
