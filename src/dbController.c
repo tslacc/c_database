@@ -14,7 +14,18 @@ static void dbMakeTableHandler(struct DBController *const dbc, const char *cmd, 
 	dbc->currentDB->makeRelation(dbc->currentDB, nextToken, atoi(nextToken2));
 }
 static void dbSelectHandler(struct DBController *const dbc, const char *cmd, const char *cmdend);
-static void dbDropHandler(struct DBController *const dbc, const char *cmd, const char *cmdend);
+static void dbDropHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
+	char *nextToken = getNextToken(cmd, cmdend);
+	for(int i = 0; i < dbc->currentDB->relationsUsed; i++){
+		if(strcmp(nextToken, dbc->currentDB->relations[i]->name)==0){
+			//Drop table and shove all the next tables to the left
+			for(int j = i; j < dbc->currentDB->relationsUsed-1; j++) {
+				dbc->currentDB->relations[j] = dbc->currentDB->relations[j+1];
+			}
+			dbc->currentDB->relationsUsed--;
+		}
+	}
+}
 static void dbInsertHandler(struct DBController *const dbc, const char *cmd, const char *cmdend);
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend);
 void parseStringCommand(struct DBController *const dbc, const char *cmd, const int cmdsz){
