@@ -13,7 +13,41 @@ static void dbMakeTableHandler(struct DBController *const dbc, const char *cmd, 
 	char *nextToken2 = getNextToken(cmd, cmdend);
 	dbc->currentDB->makeRelation(dbc->currentDB, nextToken, atoi(nextToken2));
 }
-static void dbSelectHandler(struct DBController *const dbc, const char *cmd, const char *cmdend);
+static int relationGetIndexOfFieldByName(const struct Relation *const rel, const char *const name){
+	for(int i = 0; i < rel->fieldsUsed; i++){
+		if(strcmp(rel->fields[i], name)==0) return i;
+	}
+	return -1;
+}
+static void dbSelectHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
+	char *nextToken = getNextToken(cmd, cmdend);
+	struct View *result = malloc(sizeof(struct View));
+	//Identify the table to select from
+	const char *ptr = cmd;
+	char *lastWord;
+	while(ptr<cmdend){
+		lastWord = getNextToken(cmd,cmdend);
+	}
+	if(lastWord[strlen(lastWord)==';'])
+		lastWord[strlen(lastWord)] = '\0'; //should be true for a properly formed argument
+	for(int i = 0; i < dbc->currentDB->relationsUsed; i++){
+		if(strcmp(lastWord, dbc->currentDB->relations[i]->name)==0){
+			result->selectedDB = dbc->currentDB;
+			result->selectedRelation = dbc->currentDB->relations[i];
+			break;
+		}
+	}
+	if(result->selectedRelation==NULL) return;
+	ptr = cmd;
+	lastWord = getNextToken(ptr, cmdend);
+	while(ptr < cmdend && strcmp(lastWord, "FROM")!=0){
+		if(relationGetIndexOfFieldByName(result->selectedRelation, lastWord)!=-1){
+			result->numSelectedColumns+=1;
+			result->selectedColumns = realloc(result->selectedColumns, sizeof(int)*result->numSelectedColumns);
+		}
+		lastWord = getNextToken(ptr, cmdend);
+	}
+}
 static void dbDropHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	char *nextToken = getNextToken(cmd, cmdend);
 	for(int i = 0; i < dbc->currentDB->relationsUsed; i++){
