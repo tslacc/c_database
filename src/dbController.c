@@ -3,8 +3,22 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
-// Get the next token from str and advance the pointer
+// Get the next token from str and advance the pointer.
+// Space-delimited.
 static char *getNextToken(const char *str, const char *const strend){
+	const char *ptr = str;
+	while(ptr < strend && *ptr!=' '){
+		ptr++;
+	}
+	if(*ptr == ' '){
+		// OK. Return by length where length = ptr - str +1
+		char *result = malloc(ptr-str+1);
+		memcpy(result, str, (ptr-str));
+		result[ptr-str+1] = '\0';
+		str = ptr;
+		return result;
+	}
+	str = strend;
 	return NULL;
 }
 static void dbMakeTableHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
@@ -20,7 +34,6 @@ static int relationGetIndexOfFieldByName(const struct Relation *const rel, const
 	return -1;
 }
 static void dbSelectHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
-	char *nextToken = getNextToken(cmd, cmdend);
 	struct View *result = malloc(sizeof(struct View));
 	//Identify the table to select from
 	const char *ptr = cmd;
@@ -71,7 +84,7 @@ void parseStringCommand(struct DBController *const dbc, const char *cmd, const i
 		dbSelectHandler(dbc, cmd, cmdend);
 	} else if (strcmp(nextToken, "DROP")){
 		dbDropHandler(dbc, cmd, cmdend);
-	} else if (strcmp(nextToken, "INSERT")){
+	} else if (strcmp(nextToken, "INSERT")){ //Add new record(s). Should change mode
 		dbInsertHandler(dbc, cmd, cmdend);
 	} else if (strcmp(nextToken, "ALTER")){
 		dbAlterHandler(dbc, cmd, cmdend);
