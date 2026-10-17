@@ -26,6 +26,8 @@ static void dbMakeTableHandler(struct DBController *const dbc, const char *cmd, 
 	char *nextToken = getNextToken(cmd, cmdend);
 	char *nextToken2 = getNextToken(cmd, cmdend);
 	dbc->currentDB->makeRelation(dbc->currentDB, nextToken, atoi(nextToken2));
+	free(nextToken);
+	free(nextToken2);
 }
 static int relationGetIndexOfFieldByName(const struct Relation *const rel, const char *const name){
 	for(int i = 0; i < rel->fieldsUsed; i++){
@@ -33,6 +35,13 @@ static int relationGetIndexOfFieldByName(const struct Relation *const rel, const
 	}
 	return -1;
 }
+static int dbGetRelationIndexByName(const struct Database *const db, const char *const name){
+	for(int i = 0; i < db->relationsUsed; i++){
+		if(strcmp(db->relations[i]->name, name)==0) return i;
+	}
+	return -1;
+}
+
 static void dbSelectHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	struct View *result = malloc(sizeof(struct View));
 	//Identify the table to select from
@@ -60,6 +69,7 @@ static void dbSelectHandler(struct DBController *const dbc, const char *cmd, con
 		}
 		lastWord = getNextToken(ptr, cmdend);
 	}
+	free(lastWord);
 }
 static void dbDropHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	char *nextToken = getNextToken(cmd, cmdend);
@@ -72,9 +82,15 @@ static void dbDropHandler(struct DBController *const dbc, const char *cmd, const
 			dbc->currentDB->relationsUsed--;
 		}
 	}
+	free(nextToken);
 }
-static void dbInsertHandler(struct DBController *const dbc, const char *cmd, const char *cmdend);
-static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend);
+static void dbInsertHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
+	char *nextToken = getNextToken(cmd, cmdend);
+	int relIdx = dbGetRelationIndexByName(dbc->currentDB, nextToken);
+	free(nextToken);
+}
+static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
+}
 void parseStringCommand(struct DBController *const dbc, const char *cmd, const int cmdsz){
 	const char *const cmdend = cmd+cmdsz;
 	char *nextToken = getNextToken(cmd, cmdend);
@@ -89,6 +105,7 @@ void parseStringCommand(struct DBController *const dbc, const char *cmd, const i
 	} else if (strcmp(nextToken, "ALTER")){
 		dbAlterHandler(dbc, cmd, cmdend);
 	}
+	free(nextToken);
 }
 
 struct DBController *newDBController(struct Database *currentDB){
