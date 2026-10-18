@@ -48,6 +48,9 @@ static void dbSelectHandler(struct DBController *const dbc, const char *cmd, con
 	const char *ptr = cmd;
 	char *lastWord;
 	while(ptr<cmdend){
+		// Replace with indexer instead
+		if(lastWord!=NULL) free(lastWord);
+		
 		lastWord = getNextToken(cmd,cmdend);
 	}
 	if(lastWord[strlen(lastWord)==';'])
@@ -67,6 +70,7 @@ static void dbSelectHandler(struct DBController *const dbc, const char *cmd, con
 			result->numSelectedColumns+=1;
 			result->selectedColumns = realloc(result->selectedColumns, sizeof(int)*result->numSelectedColumns);
 		}
+		if(lastWord!=NULL) free(lastWord);
 		lastWord = getNextToken(ptr, cmdend);
 	}
 	free(lastWord);
@@ -87,6 +91,19 @@ static void dbDropHandler(struct DBController *const dbc, const char *cmd, const
 static void dbInsertHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	char *nextToken = getNextToken(cmd, cmdend);
 	int relIdx = dbGetRelationIndexByName(dbc->currentDB, nextToken);
+	if(relIdx<0) return;
+	// Get column format
+	int colsCount = 0;
+	int *colsOrder = NULL;
+	if(cmdend <= cmd){ // Select all
+		int colsCount = dbc->currentDB->relations[relIdx]->fieldsUsed;
+		int *colsOrder = malloc(sizeof(int)*colsCount);
+		for(int i = 0; i < dbc->currentDB->relations[relIdx]->fieldsUsed; i++)
+			colsOrder[i] = dbc->currentDB->relations[relIdx]->fieldsUsed;
+	} else {// Select by order of names.
+		// TODO Fill
+	}
+	//Using colsCount, colsOrder, keep on parsing user lines to add new records to the given Relation.
 	free(nextToken);
 }
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
