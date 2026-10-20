@@ -106,7 +106,16 @@ static void dbInsertHandler(struct DBController *const dbc, const char *cmd, con
 	//Using colsCount, colsOrder, keep on parsing user lines to add new records to the given Relation.
 	free(nextToken);
 }
+// TODO fill
+static void getRelationFromDBByName(struct Database *db, const char *query){
+	return;
+}
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
+	char *nextToken = getNextToken(cmd, cmdend);
+	int rIdx = dbGetRelationIndexByName(dbc->currentDB, nextToken);
+	//add a column?
+	//Check if illegal 
+	return;
 }
 void parseStringCommand(struct DBController *const dbc, const char *cmd, const int cmdsz){
 	const char *const cmdend = cmd+cmdsz;
