@@ -3,28 +3,31 @@
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
+#include <stdio.h>
 // Get the next token from str and advance the pointer.
 // Space-delimited.
-static char *getNextToken(const char *str, const char *const strend){
-	const char *ptr = str;
-	while(ptr < strend && *ptr!=' '){
+static char *getNextToken(const char **str, const char *const strend){
+	printf("parsing next Token starting from %s, %p %p len %lu\n", *str, *str, strend, strend-*str);
+	const char *ptr = *str;
+	while(ptr < strend && !(*ptr==' ' || *ptr=='\0')){
 		ptr++;
 	}
-	if(*ptr == ' '){
+	if(*ptr == ' '||*ptr == '\0'){
 		// OK. Return by length where length = ptr - str +1
-		char *result = malloc(ptr-str+1);
-		memcpy(result, str, (ptr-str));
-		result[ptr-str+1] = '\0';
-		str = ptr;
+		char *result = malloc(ptr-*str+1);
+		memcpy(result, *str, (ptr-*str));
+		result[ptr-*str+1] = '\0';
+		*str = ptr;
+		printf("str modified to %p based on %p\n", *str, ptr);
 		return result;
 	}
-	str = strend;
+	*str = strend;
 	return NULL;
 }
 static void dbMakeTableHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	//Consume the rest of the args to make table
-	char *nextToken = getNextToken(cmd, cmdend);
-	char *nextToken2 = getNextToken(cmd, cmdend);
+	char *nextToken = getNextToken(&cmd, cmdend);
+	char *nextToken2 = getNextToken(&cmd, cmdend);
 	dbc->currentDB->makeRelation(dbc->currentDB, nextToken, atoi(nextToken2));
 	free(nextToken);
 	free(nextToken2);
@@ -51,7 +54,7 @@ static void dbSelectHandler(struct DBController *const dbc, const char *cmd, con
 		// Replace with indexer instead
 		if(lastWord!=NULL) free(lastWord);
 		
-		lastWord = getNextToken(cmd,cmdend);
+		lastWord = getNextToken(&cmd,cmdend);
 	}
 	if(lastWord[strlen(lastWord)==';'])
 		lastWord[strlen(lastWord)] = '\0'; //should be true for a properly formed argument
@@ -64,19 +67,19 @@ static void dbSelectHandler(struct DBController *const dbc, const char *cmd, con
 	}
 	if(result->selectedRelation==NULL) return;
 	ptr = cmd;
-	lastWord = getNextToken(ptr, cmdend);
+	lastWord = getNextToken(&ptr, cmdend);
 	while(ptr < cmdend && strcmp(lastWord, "FROM")!=0){
 		if(relationGetIndexOfFieldByName(result->selectedRelation, lastWord)!=-1){
 			result->numSelectedColumns+=1;
 			result->selectedColumns = realloc(result->selectedColumns, sizeof(int)*result->numSelectedColumns);
 		}
 		if(lastWord!=NULL) free(lastWord);
-		lastWord = getNextToken(ptr, cmdend);
+		lastWord = getNextToken(&ptr, cmdend);
 	}
 	free(lastWord);
 }
 static void dbDropHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
-	char *nextToken = getNextToken(cmd, cmdend);
+	char *nextToken = getNextToken(&cmd, cmdend);
 	for(int i = 0; i < dbc->currentDB->relationsUsed; i++){
 		if(strcmp(nextToken, dbc->currentDB->relations[i]->name)==0){
 			//Drop table and shove all the next tables to the left
@@ -89,7 +92,7 @@ static void dbDropHandler(struct DBController *const dbc, const char *cmd, const
 	free(nextToken);
 }
 static void dbInsertHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
-	char *nextToken = getNextToken(cmd, cmdend);
+	char *nextToken = getNextToken(&cmd, cmdend);
 	int relIdx = dbGetRelationIndexByName(dbc->currentDB, nextToken);
 	if(relIdx<0) return;
 	// Get column format
@@ -114,13 +117,13 @@ static int relGetAttributeIndexByName(struct Relation *rel, const char *query){
 	return -1;
 }
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
-	char *nextToken = getNextToken(cmd, cmdend);
+	char *nextToken = getNextToken(&cmd, cmdend);
 	struct Relation *rel = dbGetRelationByName(dbc->currentDB, nextToken);
 	//add a column?
 	//Check if illegal
 	if(rel!=NULL){
 		free(nextToken);
-		nextToken = getNextToken(cmd, cmdend);
+		nextToken = getNextToken(&cmd, cmdend);
 		int aIdx = relGetAttributeIndexByName(rel, nextToken);
 		if(aIdx == -1){
 			rel->fields = realloc(rel->fields, sizeof(char *)*(rel->fieldsUsed+1));
@@ -133,19 +136,23 @@ static void dbAlterHandler(struct DBController *const dbc, const char *cmd, cons
 	return;
 }
 void parseStringCommand(struct DBController *const dbc, const char *cmd, const int cmdsz){
+	printf("rcvd %s %p to parse\n", cmd, cmd);
 	const char *const cmdend = cmd+cmdsz;
-	char *nextToken = getNextToken(cmd, cmdend);
-	if(strcmp(nextToken, "CREATE")){
+	char *nextToken = getNextToken(&cmd, cmdend);
+	printf("nextToken is %s\n", nextToken);
+	printf("cmd is %p\n", cmd);
+	if(strcmp(nextToken, "CREATE")==0){
 		dbMakeTableHandler(dbc, cmd, cmdend);
-	} else if (strcmp(nextToken, "SELECT")){
+	} else if (strcmp(nextToken, "SELECT")==0){
 		dbSelectHandler(dbc, cmd, cmdend);
-	} else if (strcmp(nextToken, "DROP")){
+	} else if (strcmp(nextToken, "DROP")==0){
 		dbDropHandler(dbc, cmd, cmdend);
-	} else if (strcmp(nextToken, "INSERT")){ //Add new record(s). Should change mode
+	} else if (strcmp(nextToken, "INSERT")==0){ //Add new record(s). Should change mode
 		dbInsertHandler(dbc, cmd, cmdend);
-	} else if (strcmp(nextToken, "ALTER")){
+	} else if (strcmp(nextToken, "ALTER")==0){
 		dbAlterHandler(dbc, cmd, cmdend);
 	}
+	printf("end of parse\n");
 	free(nextToken);
 }
 
