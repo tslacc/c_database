@@ -107,14 +107,29 @@ static void dbInsertHandler(struct DBController *const dbc, const char *cmd, con
 	free(nextToken);
 }
 // TODO fill
-static void getRelationFromDBByName(struct Database *db, const char *query){
-	return;
+static struct Relation *dbGetRelationByName(struct Database *db, const char *query){
+	return NULL;
+}
+static int relGetAttributeIndexByName(struct Relation *rel, const char *query){
+	return -1;
 }
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	char *nextToken = getNextToken(cmd, cmdend);
-	int rIdx = dbGetRelationIndexByName(dbc->currentDB, nextToken);
+	struct Relation *rel = dbGetRelationByName(dbc->currentDB, nextToken);
 	//add a column?
-	//Check if illegal 
+	//Check if illegal
+	if(rel!=NULL){
+		free(nextToken);
+		nextToken = getNextToken(cmd, cmdend);
+		int aIdx = relGetAttributeIndexByName(rel, nextToken);
+		if(aIdx == -1){
+			rel->fields = realloc(rel->fields, sizeof(char *)*(rel->fieldsUsed+1));
+			rel->fieldsAllocated = rel->fieldsUsed+1;
+			rel->fields[rel->fieldsUsed] = malloc(strlen(nextToken));
+			memcpy(rel->fields[rel->fieldsUsed], nextToken, strlen(nextToken)+1);
+		}
+	}
+	free(nextToken);
 	return;
 }
 void parseStringCommand(struct DBController *const dbc, const char *cmd, const int cmdsz){
