@@ -17,7 +17,7 @@ static char *getNextToken(const char **str, const char *const strend){
 		char *result = malloc(ptr-*str+1);
 		memcpy(result, *str, (ptr-*str));
 		result[ptr-*str+1] = '\0';
-		*str = ptr;
+		*str = ptr+1;
 		printf("str modified to %p based on %p\n", *str, ptr);
 		return result;
 	}
@@ -25,9 +25,11 @@ static char *getNextToken(const char **str, const char *const strend){
 	return NULL;
 }
 static void dbMakeTableHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
+	printf("MakeTableHandler begin w %s %p %p\n", cmd, cmd, cmdend);
 	//Consume the rest of the args to make table
 	char *nextToken = getNextToken(&cmd, cmdend);
 	char *nextToken2 = getNextToken(&cmd, cmdend);
+	printf("Tokens\n\t%s %lu\n\t%s %lu\n", nextToken, strlen(nextToken), nextToken2, strlen(nextToken2));
 	dbc->currentDB->makeRelation(dbc->currentDB, nextToken, atoi(nextToken2));
 	free(nextToken);
 	free(nextToken2);

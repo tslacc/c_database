@@ -13,6 +13,9 @@ static void getLineToBuf(char *buf, size_t sz){
 		}
 	}
 }
+static void printHelp(void){
+	printf("Enter exit to quit.\n");
+}
 int main(){	
 	struct Database *db = newDatabase();
 	struct DBController *dbc = newDBController(db);
@@ -26,6 +29,8 @@ int main(){
 		printf("entered\n%s\nsize %lu\n", uInput, strlen(uInput));
 		if(strcmp(uInput, "exit")==0){
 			break;
+		} else if(strcmp(uInput, "help")==0){
+			printHelp();
 		}
 		parseStringCommand(dbc, uInput, strlen(uInput));
 	}
