@@ -14,11 +14,13 @@ static char *getNextToken(const char **str, const char *const strend){
 	}
 	if(*ptr == ' '||*ptr == '\0'){
 		// OK. Return by length where length = ptr - str +1
+		printf("Return token w size %u\n", ptr-*str+1);
 		char *result = malloc(ptr-*str+1);
 		memcpy(result, *str, (ptr-*str));
-		result[ptr-*str+1] = '\0';
+		result[ptr-*str] = '\0';
 		*str = ptr+1;
 		printf("str modified to %p based on %p\n", *str, ptr);
+		printf("returning token %s\n", result);
 		return result;
 	}
 	*str = strend;
@@ -137,6 +139,30 @@ static void dbAlterHandler(struct DBController *const dbc, const char *cmd, cons
 	free(nextToken);
 	return;
 }
+static void dbDebugHandler(const struct DBController *const dbc){
+	const struct Database *const db = dbc->currentDB;
+	printf("PTR %p %p\n", dbc, db);
+	if(db==NULL) return;
+	printf("\tNUM REL: %u\n", db->relationsUsed);
+	for(int i = 0; i < db->relationsUsed; i++){
+		printf("\tRel \"%s\"\n", db->relations[i]->name);
+		printf("\tFields used: %u\tRecords used : %u\n", db->relations[i]->fieldsUsed, db->relations[i]->recordsUsed);
+		for(int j = 0; j < db->relations[i]->fieldsUsed; j++){
+			if(db->relations[i]->fields[j]!=NULL){
+				printf("\t%s", db->relations[i]->fields[j]);
+			}else printf("\tNULL");
+		}
+		printf("\n");
+		for(int j = 0; j < db->relations[i]->recordsUsed; j++){
+			if(db->relations[i]->records[j]!=NULL){
+				for(int k = 0; k < db->relations[i]->fieldsUsed; k++){
+					printf("\t%#10lx", db->relations[i]->records[j]->values[k]);
+				}
+				printf("\n");
+			} else printf("\tIncomplete record\n");
+		}
+	}
+}
 void parseStringCommand(struct DBController *const dbc, const char *cmd, const int cmdsz){
 	printf("rcvd %s %p to parse\n", cmd, cmd);
 	const char *const cmdend = cmd+cmdsz;
@@ -153,6 +179,8 @@ void parseStringCommand(struct DBController *const dbc, const char *cmd, const i
 		dbInsertHandler(dbc, cmd, cmdend);
 	} else if (strcmp(nextToken, "ALTER")==0){
 		dbAlterHandler(dbc, cmd, cmdend);
+	} else if (strcmp(nextToken, "DEBUG")==0){
+		dbDebugHandler(dbc);
 	}
 	printf("end of parse\n");
 	free(nextToken);
