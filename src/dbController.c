@@ -4,6 +4,10 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+// TODO make
+// Parses the next token and places it inside the buffer to avoid unnecessary reallocations
+static char *getNextTokenV2(char *buffer, size_t buffer_size, const char **str, const char *const strend){
+}
 // Get the next token from str and advance the pointer.
 // Space-delimited.
 static char *getNextToken(const char **str, const char *const strend){
@@ -42,11 +46,11 @@ static int relationGetIndexOfFieldByName(const struct Relation *const rel, const
 	}
 	return -1;
 }
-static int dbGetRelationIndexByName(const struct Database *const db, const char *const name){
+static struct Relation *dbGetRelationByName(const struct Database *const db, const char *const name){
 	for(int i = 0; i < db->relationsUsed; i++){
-		if(strcmp(db->relations[i]->name, name)==0) return i;
+		if(strcmp(db->relations[i]->name, name)==0) return db->relations[i];
 	}
-	return -1;
+	return NULL;
 }
 
 static void dbSelectHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
@@ -97,25 +101,27 @@ static void dbDropHandler(struct DBController *const dbc, const char *cmd, const
 }
 static void dbInsertHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	char *nextToken = getNextToken(&cmd, cmdend);
-	int relIdx = dbGetRelationIndexByName(dbc->currentDB, nextToken);
-	if(relIdx<0) return;
+	struct Relation *rel = dbGetRelationByName(dbc->currentDB, nextToken);
+	if(rel==NULL) return;
 	// Get column format
 	int colsCount = 0;
 	int *colsOrder = NULL;
 	if(cmdend <= cmd){ // Select all
-		int colsCount = dbc->currentDB->relations[relIdx]->fieldsUsed;
+		int colsCount = rel->fieldsUsed;
 		int *colsOrder = malloc(sizeof(int)*colsCount);
-		for(int i = 0; i < dbc->currentDB->relations[relIdx]->fieldsUsed; i++)
-			colsOrder[i] = dbc->currentDB->relations[relIdx]->fieldsUsed;
+		for(int i = 0; i < rel->fieldsUsed; i++)
+			colsOrder[i] = rel->fieldsUsed;
 	} else {// Select by order of names.
 		// TODO Fill
+		free(nextToken);
+		while(1){
+			nextToken = getNextToken(&cmd, cmdend);
+			if(nextToken==NULL) break;
+			int colID = 0;
+		}
 	}
 	//Using colsCount, colsOrder, keep on parsing user lines to add new records to the given Relation.
 	free(nextToken);
-}
-// TODO fill
-static struct Relation *dbGetRelationByName(struct Database *db, const char *query){
-	return NULL;
 }
 static int relGetAttributeIndexByName(struct Relation *rel, const char *query){
 	return -1;
