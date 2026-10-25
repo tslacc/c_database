@@ -6,7 +6,9 @@
 #include <stdio.h>
 // TODO make
 // Parses the next token and places it inside the buffer to avoid unnecessary reallocations
-static char *getNextTokenV2(char *buffer, size_t buffer_size, const char **str, const char *const strend){
+// Returns the length of the token
+static int *getNextTokenV2(char *buffer, size_t buffer_size, const char **str, const char *const strend){
+	return 0;
 }
 // Get the next token from str and advance the pointer.
 // Space-delimited.
@@ -124,6 +126,9 @@ static void dbInsertHandler(struct DBController *const dbc, const char *cmd, con
 	free(nextToken);
 }
 static int relGetAttributeIndexByName(struct Relation *rel, const char *query){
+	for(int i = 0; i < rel->fieldsUsed; i++){
+		if(strcmp(rel->fields[i], query)==0) return i;
+	}
 	return -1;
 }
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
