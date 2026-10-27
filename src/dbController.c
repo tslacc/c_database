@@ -7,7 +7,25 @@
 // TODO make
 // Parses the next token and places it inside the buffer to avoid unnecessary reallocations
 // Returns the length of the token
-static int *getNextTokenV2(char *buffer, size_t buffer_size, const char **str, const char *const strend){
+static unsigned long int getNextTokenV2(char *buffer, size_t buffer_size, const char ** const str, const char *const strend){
+	printf("parsing next Token starting from %s, %p %p len %lu\n", *str, *str, strend, strend-*str);
+	const char *ptr = *str;
+	const char *const endPos = buffer_size + ((buffer_size < (size_t)(strend-(*str)))?(*str+buffer_size):strend);
+	while(ptr < endPos && !(*ptr==' ' || *ptr=='\0')){
+		ptr++;
+	}
+	if(*ptr == ' '||*ptr == '\0'){
+		// OK. Return by length where length = ptr - str +1
+		printf("Return token w size %lu\n", ptr-*str+1);
+		char *result = malloc(ptr-*str+1);
+		memcpy(result, *str, (ptr-*str));
+		result[ptr-*str] = '\0';
+		*str = ptr+1;
+		printf("str modified to %p based on %p\n", *str, ptr);
+		printf("returning token %s\n", result);
+		return ptr-*str;
+	}
+	*str = strend;
 	return 0;
 }
 // Get the next token from str and advance the pointer.
@@ -20,7 +38,7 @@ static char *getNextToken(const char **str, const char *const strend){
 	}
 	if(*ptr == ' '||*ptr == '\0'){
 		// OK. Return by length where length = ptr - str +1
-		printf("Return token w size %u\n", ptr-*str+1);
+		printf("Return token w size %lu\n", ptr-*str+1);
 		char *result = malloc(ptr-*str+1);
 		memcpy(result, *str, (ptr-*str));
 		result[ptr-*str] = '\0';
@@ -42,9 +60,9 @@ static void dbMakeTableHandler(struct DBController *const dbc, const char *cmd, 
 	free(nextToken);
 	free(nextToken2);
 }
-static int relationGetIndexOfFieldByName(const struct Relation *const rel, const char *const name){
+static int relGetAttributeIndexByName(struct Relation *rel, const char *query){
 	for(int i = 0; i < rel->fieldsUsed; i++){
-		if(strcmp(rel->fields[i], name)==0) return i;
+		if(strcmp(rel->fields[i], query)==0) return i;
 	}
 	return -1;
 }
@@ -79,7 +97,7 @@ static void dbSelectHandler(struct DBController *const dbc, const char *cmd, con
 	ptr = cmd;
 	lastWord = getNextToken(&ptr, cmdend);
 	while(ptr < cmdend && strcmp(lastWord, "FROM")!=0){
-		if(relationGetIndexOfFieldByName(result->selectedRelation, lastWord)!=-1){
+		if(relGetAttributeIndexByName(result->selectedRelation, lastWord)!=-1){
 			result->numSelectedColumns+=1;
 			result->selectedColumns = realloc(result->selectedColumns, sizeof(int)*result->numSelectedColumns);
 		}
@@ -119,17 +137,16 @@ static void dbInsertHandler(struct DBController *const dbc, const char *cmd, con
 		while(1){
 			nextToken = getNextToken(&cmd, cmdend);
 			if(nextToken==NULL) break;
-			int colID = 0;
+			int colID = relGetAttributeIndexByName(rel, nextToken);
+			if(colID!=-1){
+				colsOrder = realloc(colsOrder, sizeof(int)*(colsCount+1));
+				colsOrder[colsCount] = colID;
+				colsCount++;
+			}
 		}
 	}
 	//Using colsCount, colsOrder, keep on parsing user lines to add new records to the given Relation.
 	free(nextToken);
-}
-static int relGetAttributeIndexByName(struct Relation *rel, const char *query){
-	for(int i = 0; i < rel->fieldsUsed; i++){
-		if(strcmp(rel->fields[i], query)==0) return i;
-	}
-	return -1;
 }
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	char *nextToken = getNextToken(&cmd, cmdend);
