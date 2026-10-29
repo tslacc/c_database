@@ -1,32 +1,57 @@
 #include "dbController.h"
 #include "lib_database.h"
+#include <ctype.h>
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-// TODO make
+static unsigned int countTokensInLine(const char* const str){
+	const char *ptr = str;
+	unsigned int result = 0;
+	while(*ptr!='\0'){
+		if(isalpha(*ptr) || *ptr == '_'){
+			
+		} else if (*ptr == ' ' || *ptr == ','){
+			result++;
+			while(*ptr == ' ' || *ptr == ','){
+				ptr++;
+			}
+		}
+		ptr++;
+	}
+	return result;
+}
 // Parses the next token and places it inside the buffer to avoid unnecessary reallocations
 // Returns the length of the token
 static unsigned long int getNextTokenV2(char *buffer, size_t buffer_size, const char ** const str, const char *const strend){
 	printf("parsing next Token starting from %s, %p %p len %lu\n", *str, *str, strend, strend-*str);
 	const char *ptr = *str;
 	const char *const endPos = buffer_size + ((buffer_size < (size_t)(strend-(*str)))?(*str+buffer_size):strend);
-	while(ptr < endPos && !(*ptr==' ' || *ptr=='\0')){
+	while(ptr < endPos && !(*ptr==' ' || *ptr=='\0' || *ptr == ',')){
 		ptr++;
 	}
-	if(*ptr == ' '||*ptr == '\0'){
-		// OK. Return by length where length = ptr - str +1
-		printf("Return token w size %lu\n", ptr-*str+1);
-		char *result = malloc(ptr-*str+1);
-		memcpy(result, *str, (ptr-*str));
-		result[ptr-*str] = '\0';
-		*str = ptr+1;
-		printf("str modified to %p based on %p\n", *str, ptr);
-		printf("returning token %s\n", result);
-		return ptr-*str;
+	if(endPos <= ptr){
+		*str = strend;
+		return 0;
 	}
-	*str = strend;
-	return 0;
+	if(*ptr == ','){
+		ptr--;
+	}
+	
+	// Return by length where length = ptr - str +1
+	printf("Return token w size %lu\n", ptr-*str+1);
+	char *result = malloc(ptr-*str+1);
+	memcpy(result, *str, (ptr-*str));
+	result[ptr-*str] = '\0';
+	*str = ptr+1;
+	printf("str modified to %p based on %p\n", *str, ptr);
+	printf("returning token %s\n", result);
+	unsigned long int returnSize = *str-ptr;
+	// Cleanup, consume all commas, spaces
+	while(*str < endPos && (**str == ' ' ||**str == ',')){
+		(*str)++;
+	}
+	return returnSize;
 }
 // Get the next token from str and advance the pointer.
 // Space-delimited.
@@ -132,7 +157,6 @@ static void dbInsertHandler(struct DBController *const dbc, const char *cmd, con
 		for(int i = 0; i < rel->fieldsUsed; i++)
 			colsOrder[i] = rel->fieldsUsed;
 	} else {// Select by order of names.
-		// TODO Fill
 		free(nextToken);
 		while(1){
 			nextToken = getNextToken(&cmd, cmdend);
@@ -146,6 +170,8 @@ static void dbInsertHandler(struct DBController *const dbc, const char *cmd, con
 		}
 	}
 	//Using colsCount, colsOrder, keep on parsing user lines to add new records to the given Relation.
+	printf("Manual entry: enter next record as \"RecordName token, token,...\"\n");
+	
 	free(nextToken);
 }
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
