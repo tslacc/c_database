@@ -5,21 +5,42 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
+// In 0 mode, advance str to a valid character, else advance str to a splitting token
+static void advancePtrToToken(const char ** const str, const char *const strend, int tokenSide){
+	while(*str<strend && tokenSide ^ (**str==' '||**str==',')){
+		(*str)++;
+	}
+}
 static unsigned int countTokensInLine(const char* const str){
 	const char *ptr = str;
 	unsigned int result = 0;
-	while(*ptr!='\0'){
-		if(isalpha(*ptr) || *ptr == '_'){
-			
-		} else if (*ptr == ' ' || *ptr == ','){
-			result++;
-			while(*ptr == ' ' || *ptr == ','){
-				ptr++;
-			}
-		}
-		ptr++;
+	//drop bad head of string
+	const char *const strend = str+strlen(str)+1;
+	advancePtrToToken(&ptr, strend, 0);
+	const char *subPtr = ptr;
+	while(1){
+		advancePtrToToken(&subPtr, strend, 1);
+		if(subPtr == ptr) return result; //There is no valid token at this point
+		result++;
+		advancePtrToToken(&subPtr, strend, 0);
 	}
 	return result;
+}
+// Returns the length of the token, not including the terminating \0
+static unsigned long int getNextTokenV3(char *buffer, unsigned long int buffer_size, const char **const str, const char *const strend){
+	const char *left = *str;
+	advancePtrToToken(&left, strend, 0);
+	const char *right = left;
+	advancePtrToToken(&right, strend, 1);
+	const unsigned int copyLen = ((buffer_size-1>(unsigned long int)(right-left))?(unsigned long int)(right-left):buffer_size-1);
+	
+	if(copyLen<=0) return 0;
+	
+	memcpy(buffer, left, copyLen);
+	buffer[copyLen] = '\0';
+	left = right;
+	advancePtrToToken(&left, strend, 0);
+	return copyLen;
 }
 // Parses the next token and places it inside the buffer to avoid unnecessary reallocations
 // Returns the length of the token
