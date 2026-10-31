@@ -166,7 +166,8 @@ static void dbDropHandler(struct DBController *const dbc, const char *cmd, const
 	free(nextToken);
 }
 static void dbInsertHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
-	char *nextToken = getNextToken(&cmd, cmdend);
+	char nextToken[512];
+	size_t ntLen = getNextTokenV3(nextToken, sizeof(nextToken), &cmd, cmdend);
 	struct Relation *rel = dbGetRelationByName(dbc->currentDB, nextToken);
 	if(rel==NULL) return;
 	// Get column format
@@ -178,10 +179,9 @@ static void dbInsertHandler(struct DBController *const dbc, const char *cmd, con
 		for(int i = 0; i < rel->fieldsUsed; i++)
 			colsOrder[i] = rel->fieldsUsed;
 	} else {// Select by order of names.
-		free(nextToken);
 		while(1){
-			nextToken = getNextToken(&cmd, cmdend);
-			if(nextToken==NULL) break;
+			ntLen = getNextTokenV3(nextToken, sizeof(nextToken), &cmd, cmdend);
+			if(ntLen==0) break;
 			int colID = relGetAttributeIndexByName(rel, nextToken);
 			if(colID!=-1){
 				colsOrder = realloc(colsOrder, sizeof(int)*(colsCount+1));
@@ -192,8 +192,8 @@ static void dbInsertHandler(struct DBController *const dbc, const char *cmd, con
 	}
 	//Using colsCount, colsOrder, keep on parsing user lines to add new records to the given Relation.
 	printf("Manual entry: enter next record as \"RecordName token, token,...\"\n");
+	// TODO Get line here
 	
-	free(nextToken);
 }
 static void dbAlterHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	char *nextToken = getNextToken(&cmd, cmdend);
