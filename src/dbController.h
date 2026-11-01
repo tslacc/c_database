@@ -21,7 +21,9 @@ struct View{
 };
 struct DBController{
 	struct Database *currentDB;
-	struct View *currentView;	
+	struct View *currentView;
+	char uInput[255];
 };
 struct DBController *newDBController(struct Database *currentDB);
-void parseStringCommand(struct DBController *const db, const char *cmd, const int cmdsz);
+void dbcControlLoop(struct DBController *const dbc);
+

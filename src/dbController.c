@@ -97,11 +97,15 @@ static char *getNextToken(const char **str, const char *const strend){
 	*str = strend;
 	return NULL;
 }
-static void dbMakeTableHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
+static void dbCreateTableHandler(struct DBController *const dbc, const char *cmd, const char *cmdend){
 	printf("MakeTableHandler begin w %s %p %p\n", cmd, cmd, cmdend);
 	//Consume the rest of the args to make table
+	//TODO Change token grabber to v2
 	char *nextToken = getNextToken(&cmd, cmdend);
 	char *nextToken2 = getNextToken(&cmd, cmdend);
+	//TODO Make v4 token grabber that doesn't modify the original pointer
+	//signature size_t tokenGrabber(char *const buffer, const size_t bsz, const char *const str, const size_t ssz);
+	char *nextToken_0 = 0;
 	printf("Tokens\n\t%s %lu\n\t%s %lu\n", nextToken, strlen(nextToken), nextToken2, strlen(nextToken2));
 	dbc->currentDB->makeRelation(dbc->currentDB, nextToken, atoi(nextToken2));
 	free(nextToken);
@@ -239,14 +243,17 @@ static void dbDebugHandler(const struct DBController *const dbc){
 		}
 	}
 }
-void parseStringCommand(struct DBController *const dbc, const char *cmd, const int cmdsz){
+static void printHelp(void){
+	printf("help print here\n");
+}
+static void parseStringCommand(struct DBController *const dbc, const char *cmd, const int cmdsz){
 	printf("rcvd %s %p to parse\n", cmd, cmd);
 	const char *const cmdend = cmd+cmdsz;
 	char *nextToken = getNextToken(&cmd, cmdend);
 	printf("nextToken is %s\n", nextToken);
 	printf("cmd is %p\n", cmd);
 	if(strcmp(nextToken, "CREATE")==0){
-		dbMakeTableHandler(dbc, cmd, cmdend);
+		dbCreateTableHandler(dbc, cmd, cmdend);
 	} else if (strcmp(nextToken, "SELECT")==0){
 		dbSelectHandler(dbc, cmd, cmdend);
 	} else if (strcmp(nextToken, "DROP")==0){
@@ -262,6 +269,18 @@ void parseStringCommand(struct DBController *const dbc, const char *cmd, const i
 	free(nextToken);
 }
 
+void dbcControlLoop(struct DBController *const dbc){
+	printf("%p control loop; enter command\n", dbc);
+	printf("Write result to buffer %p\n", dbc->uInput);
+	consoleLineToBuffer(dbc->uInput, sizeof(dbc->uInput));
+	printf("entered string: \n\t%s\n\tsize: %lu\n", dbc->uInput, strlen(dbc->uInput));
+	if(strcmp(dbc->uInput, "exit")==0){
+		return;
+	} else if(strcmp(dbc->uInput, "help")==0){
+		printHelp();
+	} else parseStringCommand(dbc, dbc->uInput, strlen(dbc->uInput));
+	return;
+}
 struct DBController *newDBController(struct Database *currentDB){
 	struct DBController *result = malloc(sizeof(struct DBController));
 	result->currentDB = currentDB;

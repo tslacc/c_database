@@ -2,9 +2,6 @@
 #define LIBCONSOLEINPUT
 #include <stddef.h>
 
-struct consoleInput{
-	void (*consoleLineToBuffer)(char *const buffer, const size_t sz);
-};
-extern struct consoleInput api_console;
+unsigned int consoleLineToBuffer(char *const restrict buffer, const size_t sz);
 
 #endif
