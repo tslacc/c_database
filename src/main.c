@@ -1,18 +1,9 @@
 #include "lib_database.h"
+#include "lib_consoleInput.h"
 #include "dbController.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-static void getLineToBuf(char *buf, size_t sz){
-	size_t i = 0;
-	for(; i < sz-1; i++){
-		buf[i] = getc(stdin);
-		if(buf[i] == '\n'){
-			buf[i] = '\0';
-			return;
-		}
-	}
-}
 static void printHelp(void){
 	printf("Enter exit to quit.\n");
 }
@@ -25,7 +16,8 @@ int main(){
 	char uInput[256];
 	while(1)
 	{
-		getLineToBuf(uInput, 256);
+		api_console.consoleLineToBuffer(uInput, sizeof(uInput));
+		
 		printf("entered\n%s\nsize %lu\n", uInput, strlen(uInput));
 		if(strcmp(uInput, "exit")==0){
 			break;
@@ -37,15 +29,4 @@ int main(){
 	// todo internal free of db, dbc
 	free(db);
 	free(dbc);
-	/*
-	printf("Enter something.\n");
-	char **uInput2 = malloc(sizeof(char*));
-	*uInput2 = NULL;
-	size_t SZIN = 256; 
-	if(getline(uInput2, &SZIN, stdin) != -1)
-	{
-		printf("entered getline\n%s", *uInput2);
-	}
-	return 0;
-	*/
 }

@@ -1,4 +1,5 @@
 #include "dbController.h"
+#include "lib_consoleInput.h"
 #include "lib_database.h"
 #include <ctype.h>
 #include <stddef.h>
