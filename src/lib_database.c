@@ -9,6 +9,18 @@ static struct Record *newRecord(const char *name, const uint32_t numFields){
 	result->values = malloc(sizeof(uint32_t)*numFields);
 	return result;
 }
+// Add a new record slot to rel and return its index.
+static int relationExpandRecords(struct Relation *const rel){
+	rel->records = realloc(rel->records, sizeof(struct Record *)*rel->recordsUsed+1);
+	rel->recordsUsed++;
+	return rel->recordsUsed-1;
+}
+static struct Record *RelationMakeRecord(struct Relation *const rel, const char *const name){
+	struct Record *r = newRecord(name, rel->fieldsUsed);
+	rel->records[relationExpandRecords(rel)] = r;
+	return r;
+}
+
 
 static struct Relation *newRelation(const char *name, const uint32_t numFields){
 	struct Relation *result = malloc(sizeof(struct Relation));
@@ -33,4 +45,3 @@ struct Database *newDatabase(void){
 	result->makeRelation = dbmakerelation;
 	return result;
 }
-
