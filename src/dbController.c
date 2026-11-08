@@ -6,33 +6,66 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-struct bounds2D{
-	unsigned int rows;
-	unsigned int cols;
-};
+
+//Move the pointer to either the next LEFT or RIGHT of a valid token.
+static void moveStringPointer(const char **const str, int side){
+	int c = **str;
+	while(side ^ (c == ' '||c==','||c=='\n')){
+		(*str)++;
+		 c = **str;
+	}
+}
 static int countTokens(const char *const str){
-	(void)str;
-	return 0;
+	const char *ptr = str;
+	
+	moveStringPointer(&ptr, 0); //ptr is now at the begin of any valid token
+	
+	const char *ptrold = ptr; //ptr and ptr old are now at the beginning of the first valid token, if any
+	moveStringPointer(&ptr, 1); //ptr now at begin of delimit block
+	moveStringPointer(&ptr, 0); //ptr now at begin of valid token
+	int result = 0;
+	while(ptr!=ptrold){
+		result++;
+		ptrold = ptr;
+		moveStringPointer(&ptr, 1); 
+		moveStringPointer(&ptr, 0); 
+		
+	}
+	return result;
+}
+//get a token from str and advance the pointer
+static char *getNextToken(const char **const str){
+	moveStringPointer(str,0);
+	const char **begin = str;
+	moveStringPointer(str,1); //str is now at the final position
+	char *result = malloc(*str-*begin+1);
+	memcpy(result, begin, (*str-*begin));
+	result[*str-*begin] = '\0';
+	return result;	
 }
 //Return the number of tokens filled
-static void tokenize(const char *const str, char ***buffers, struct bounds2D *result){
+static int tokenize(const char *const str, char ***buffers){
 	(void)buffers;
 	(void)str;
 	int rowCount = countTokens(str);
-	result->rows = rowCount;
-	result->cols = 0;
-	
-	return;
+	*buffers = malloc(sizeof(char*)*rowCount);
+	const char *ptr = str;
+	for(int i = 0; i < rowCount; i++){
+		*buffers[i] = getNextToken(&ptr);
+	}
+	return rowCount;
 }
 static void printHelp(void){
 	printf("help print here\n");
 }
 static void parseStringCommand(struct DBController *const dbc, const char *const cmd){
+	(void)dbc;
 	printf("rcvd %s %p to parse\n", cmd, cmd);
 	char **tokens;
-	struct bounds2D rsz;
-	tokenize(cmd, &tokens, &rsz);
+	int tokenCount = tokenize(cmd, &tokens);
+	printf("retrieved %u tokens\n", tokenCount);
 	printf("nextToken is %s\n", tokens[0]);
+	
 	printf("cmd is %p\n", cmd);
 	if(strcmp(tokens[0], "CREATE")==0){
 		//dbCreateTableHandler(dbc, cmd, cmdend);
