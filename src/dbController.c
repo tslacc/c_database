@@ -8,66 +8,19 @@
 #include <string.h>
 #include <stdio.h>
 
-//Move the pointer to either the next LEFT or RIGHT of a valid token.
-static void moveStringPointer(const char **const str, int side){
-	int c = **str;
-	while(side ^ (c == ' '||c==','||c=='\n')){
-		(*str)++;
-		 c = **str;
-	}
-}
-static int countTokens(const char *const str){
-	const char *ptr = str;
-	
-	moveStringPointer(&ptr, 0); //ptr is now at the begin of any valid token
-	
-	const char *ptrold = ptr; //ptr and ptr old are now at the beginning of the first valid token, if any
-	moveStringPointer(&ptr, 1); //ptr now at begin of delimit block
-	moveStringPointer(&ptr, 0); //ptr now at begin of valid token
-	int result = 0;
-	while(ptr!=ptrold){
-		result++;
-		ptrold = ptr;
-		moveStringPointer(&ptr, 1); 
-		moveStringPointer(&ptr, 0); 
-		
-	}
-	return result;
-}
-//get a token from str and advance the pointer
-static char *getNextToken(const char **const str){
-	moveStringPointer(str,0);
-	const char **begin = str;
-	moveStringPointer(str,1); //str is now at the final position
-	char *result = malloc(*str-*begin+1);
-	memcpy(result, begin, (*str-*begin));
-	result[*str-*begin] = '\0';
-	return result;	
-}
-//Return the number of tokens filled
-static int tokenize(const char *const str, char ***buffers){
-	(void)buffers;
-	(void)str;
-	int rowCount = countTokens(str);
-	*buffers = malloc(sizeof(char*)*rowCount);
-	const char *ptr = str;
-	for(int i = 0; i < rowCount; i++){
-		*buffers[i] = getNextToken(&ptr);
-	}
-	return rowCount;
-}
 static void printHelp(void){
 	printf("help print here\n");
 }
-static void parseStringCommand(struct DBController *const dbc, const char *const cmd){
+static void parseStringCommand(struct DBController *const dbc, char *const cmd){
 	(void)dbc;
 	printf("rcvd %s %p to parse\n", cmd, cmd);
-	char **tokens;
-	int tokenCount = tokenize(cmd, &tokens);
-	printf("retrieved %u tokens\n", tokenCount);
-	printf("nextToken is %s\n", tokens[0]);
+	struct StringTokens tokens;
+	strTokenize(cmd, &tokens);
+	printf("retrieved %u tokens\n", tokens.tokenCount);
+	printf("nextToken is %s\n", (cmd+tokens.tokens[0]));
 	
 	printf("cmd is %p\n", cmd);
+	/*
 	if(strcmp(tokens[0], "CREATE")==0){
 		//dbCreateTableHandler(dbc, cmd, cmdend);
 	} else if (strcmp(tokens[0], "SELECT")==0){
@@ -81,6 +34,7 @@ static void parseStringCommand(struct DBController *const dbc, const char *const
 	} else if (strcmp(tokens[0], "DEBUG")==0){
 		//dbDebugHandler(dbc);
 	}
+	*/
 	printf("end of parse\n");
 }
 
