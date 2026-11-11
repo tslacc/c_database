@@ -14,12 +14,15 @@ static void printHelp(void){
 static void parseStringCommand(struct DBController *const dbc, char *const cmd){
 	(void)dbc;
 	printf("rcvd %s %p to parse\n", cmd, cmd);
-	struct StringTokens tokens;
-	strTokenize(cmd, &tokens);
-	printf("retrieved %u tokens\n", tokens.tokenCount);
-	printf("nextToken is %s\n", (cmd+tokens.tokens[0]));
+	struct StringTokens str_tok;
+	strTokenize(cmd, &str_tok);
+	printf("retrieved %u tokens\n", str_tok.tokenCount);
+	printf("nextToken is %s\n", (cmd+str_tok.tokens[0]));
 	
 	printf("cmd is %p\n", cmd);
+	if(strcmp((cmd+str_tok.tokens[0]),"CREATE")==0){
+		printf("test match create ok\n");
+	}
 	/*
 	if(strcmp(tokens[0], "CREATE")==0){
 		//dbCreateTableHandler(dbc, cmd, cmdend);
