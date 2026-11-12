@@ -8,6 +8,10 @@
 #include <string.h>
 #include <stdio.h>
 
+static void dbCreateTableHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *tok){
+	if(tok->tokenCount!=3) return;
+	dbc->currentDB->makeRelation(dbc->currentDB, (cmd+tok->tokens[0]), atoi(cmd+tok->tokens[2]));
+}
 static void printHelp(void){
 	printf("help print here\n");
 }
@@ -22,10 +26,11 @@ static void parseStringCommand(struct DBController *const dbc, char *const cmd){
 	printf("cmd is %p\n", cmd);
 	if(strcmp((cmd+str_tok.tokens[0]),"CREATE")==0){
 		printf("test match create ok\n");
+		dbCreateTableHandler(dbc, cmd, &str_tok);
 	}
 	/*
 	if(strcmp(tokens[0], "CREATE")==0){
-		//dbCreateTableHandler(dbc, cmd, cmdend);
+		
 	} else if (strcmp(tokens[0], "SELECT")==0){
 		//dbSelectHandler(dbc, cmd, cmdend);
 	} else if (strcmp(tokens[0], "DROP")==0){
