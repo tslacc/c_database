@@ -10,16 +10,16 @@ struct Record{
 struct Relation{
 	char *name;
 	char **fields;
-	int fieldsUsed;
-	int fieldsAllocated;
+	unsigned int fieldsUsed;
+	unsigned int fieldsAllocated;
 	struct Record **records;
-	int recordsUsed;
-	int recordsAllocated;
+	unsigned int recordsUsed;
+	unsigned int recordsAllocated;
 };
 struct Database{
 	struct Relation **relations;
-	int relationsUsed;
-	int relationsAllocated;
+	unsigned int relationsUsed;
+	unsigned int relationsAllocated;
 	void (*makeRelation)(struct Database *const db, const char *name, const uint32_t numFields);
 };
 struct Database *newDatabase(void);

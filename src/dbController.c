@@ -8,9 +8,35 @@
 #include <string.h>
 #include <stdio.h>
 
+static struct Relation *getRelationByNameFromDB(const struct Database *const db, const char *const name){
+	for(unsigned int i = 0; i < db->relationsUsed; i++){
+		if(strcmp(db->relations[i]->name, name)==0){
+			return(db->relations[i]);
+		}
+	}
+	return NULL;
+}
 static void dbCreateTableHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *tok){
 	if(tok->tokenCount!=3) return;
 	dbc->currentDB->makeRelation(dbc->currentDB, (cmd+tok->tokens[0]), atoi(cmd+tok->tokens[2]));
+}
+// SELECT cols,... FROM relation
+static void dbSelectHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *tok){
+	if(tok->tokenCount<4) return;
+	dbc->currentView->selectedRelation = getRelationByNameFromDB(dbc->currentView->selectedDB, cmd+tok->tokens[tok->tokenCount-1]);
+	const struct Relation *const rel = dbc->currentView->selectedRelation;
+	unsigned int *validCols = 0;
+	unsigned int validColCount = 0;
+	for(unsigned int i = 1; i < tok->tokenCount-2; i++){
+		for(unsigned int j = 0; j < rel->fieldsUsed; j++){
+			if(strcmp(rel->fields[j], cmd+tok->tokens[i])==0){
+				validColCount++;
+				validCols = realloc(validCols, sizeof(unsigned int)*validColCount);
+				validCols[validColCount-1]=j;
+				break;
+			}
+		}
+	}
 }
 static void printHelp(void){
 	printf("help print here\n");
@@ -24,9 +50,12 @@ static void parseStringCommand(struct DBController *const dbc, char *const cmd){
 	printf("nextToken is %s\n", (cmd+str_tok.tokens[0]));
 	
 	printf("cmd is %p\n", cmd);
-	if(strcmp((cmd+str_tok.tokens[0]),"CREATE")==0){
+	const char *const carg0 = cmd+str_tok.tokens[0];
+	if(strcmp((carg0),"CREATE")==0){
 		printf("test match create ok\n");
 		dbCreateTableHandler(dbc, cmd, &str_tok);
+	} else if (strcmp((carg0),"SELECT")==0){
+		dbSelectHandler(dbc, cmd, &str_tok);
 	}
 	/*
 	if(strcmp(tokens[0], "CREATE")==0){
