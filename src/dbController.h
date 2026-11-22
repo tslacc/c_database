@@ -16,7 +16,7 @@ struct View{
 	struct Relation *selectedRelation;
 	int *selectedRows;
 	int numSelectedRows;
-	int *selectedColumns;
+	unsigned int *selectedColumns;
 	int numSelectedColumns;
 };
 struct DBController{

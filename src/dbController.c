@@ -20,16 +20,12 @@ static void dbCreateTableHandler(struct DBController *const dbc, const char *con
 	if(tok->tokenCount!=3) return;
 	dbc->currentDB->makeRelation(dbc->currentDB, (cmd+tok->tokens[0]), atoi(cmd+tok->tokens[2]));
 }
-// SELECT cols,... FROM relation and apply to DBController
-static void dbSelectHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *tok){
-	if(tok->tokenCount<4) return;
-	dbc->currentView->selectedRelation = getRelationByNameFromDB(dbc->currentView->selectedDB, cmd+tok->tokens[tok->tokenCount-1]);
-	const struct Relation *const rel = dbc->currentView->selectedRelation;
+static void viewSelectColumns(struct View *const view, const char *const cmd, const struct StringTokens *tok, const unsigned int begin, const unsigned int end){
 	unsigned int *validCols = 0;
 	unsigned int validColCount = 0;
-	for(unsigned int i = 1; i < tok->tokenCount-2; i++){
-		for(unsigned int j = 0; j < rel->fieldsUsed; j++){
-			if(strcmp(rel->fields[j], cmd+tok->tokens[i])==0){
+	for(unsigned int i = begin; i < end; i++){
+		for(unsigned int j = 0; j < view->selectedRelation->fieldsUsed; j++){
+			if(strcmp(view->selectedRelation->fields[j], cmd+tok->tokens[i])==0){
 				// Validate that there are no duplicates
 				unsigned int duplicate = 0;
 				for(unsigned int k = 0; k < validColCount; k++){
@@ -47,6 +43,14 @@ static void dbSelectHandler(struct DBController *const dbc, const char *const cm
 			}
 		}
 	}
+	view->numSelectedColumns = validColCount;
+	view->selectedColumns = validCols;
+}
+// SELECT cols,... FROM relation and apply to DBController
+static void dbSelectHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *tok){
+	if(tok->tokenCount<4) return;
+	dbc->currentView->selectedRelation = getRelationByNameFromDB(dbc->currentView->selectedDB, cmd+tok->tokens[tok->tokenCount-1]);
+	viewSelectColumns(dbc->currentView, cmd, tok, 1, tok->tokenCount-2);
 }
 // DROP 
 static void dbDropHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *const tok){
@@ -56,6 +60,12 @@ static void dbDropHandler(struct DBController *const dbc, const char *const cmd,
 	if(strcmp(dropArg,"TABLE")){
 		//Drop TABLE handler
 	}
+}
+static void dbInsertHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *const tok){
+	if(tok -> tokenCount < 3) return;
+	//Identify the table
+	struct Relation *const rel = getRelationByNameFromDB(dbc->currentDB, cmd+tok->tokens[2]);
+	if(rel==NULL) return;
 }
 static void printHelp(void){
 	printf("help print here\n");
