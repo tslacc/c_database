@@ -24,8 +24,8 @@ static void viewSelectColumns(struct View *const view, const char *const cmd, co
 	unsigned int *validCols = 0;
 	unsigned int validColCount = 0;
 	for(unsigned int i = begin; i < end; i++){
-		for(unsigned int j = 0; j < view->selectedRelation->fieldsUsed; j++){
-			if(strcmp(view->selectedRelation->fields[j], cmd+tok->tokens[i])==0){
+		for(unsigned int j = 0; j < view->rel->fieldsUsed; j++){
+			if(strcmp(view->rel->fields[j], cmd+tok->tokens[i])==0){
 				// Validate that there are no duplicates
 				unsigned int duplicate = 0;
 				for(unsigned int k = 0; k < validColCount; k++){
@@ -49,7 +49,7 @@ static void viewSelectColumns(struct View *const view, const char *const cmd, co
 // SELECT cols,... FROM relation and apply to DBController
 static void dbSelectHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *tok){
 	if(tok->tokenCount<4) return;
-	dbc->currentView->selectedRelation = getRelationByNameFromDB(dbc->currentView->selectedDB, cmd+tok->tokens[tok->tokenCount-1]);
+	dbc->currentView->rel = getRelationByNameFromDB(dbc->currentView->db, cmd+tok->tokens[tok->tokenCount-1]);
 	viewSelectColumns(dbc->currentView, cmd, tok, 1, tok->tokenCount-2);
 }
 // DROP 
@@ -61,11 +61,10 @@ static void dbDropHandler(struct DBController *const dbc, const char *const cmd,
 		//Drop TABLE handler
 	}
 }
+// INSERT name, col values
 static void dbInsertHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *const tok){
-	if(tok -> tokenCount < 3) return;
-	//Identify the table
-	struct Relation *const rel = getRelationByNameFromDB(dbc->currentDB, cmd+tok->tokens[2]);
-	if(rel==NULL) return;
+	if(tok -> tokenCount != 2+dbc->currentView->numSelectedColumns) return;
+	relationMakeRecord(dbc->currentView->rel, cmd+tok->tokens[1]);
 }
 static void printHelp(void){
 	printf("help print here\n");
@@ -87,9 +86,9 @@ static void parseStringCommand(struct DBController *const dbc, char *const cmd){
 		dbSelectHandler(dbc, cmd, &str_tok);
 	} else if (strcmp(carg0, "DROP")==0){
 		dbDropHandler(dbc, cmd, &str_tok);
+	} else if (strcmp(carg0, "INSERT")==0){ //Add new record(s). Should change mode
+		dbInsertHandler(dbc, cmd, &str_tok);
 	}/*
-	} else if (strcmp(tokens[0], "INSERT")==0){ //Add new record(s). Should change mode
-		//dbInsertHandler(dbc, cmd, cmdend);
 	} else if (strcmp(tokens[0], "ALTER")==0){
 		//dbAlterHandler(dbc, cmd, cmdend);
 	} else if (strcmp(tokens[0], "DEBUG")==0){

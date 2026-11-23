@@ -15,7 +15,7 @@ static int relationExpandRecords(struct Relation *const rel){
 	rel->recordsUsed++;
 	return rel->recordsUsed-1;
 }
-static struct Record *RelationMakeRecord(struct Relation *const rel, const char *const name){
+struct Record *relationMakeRecord(struct Relation *const rel, const char *const name){
 	struct Record *r = newRecord(name, rel->fieldsUsed);
 	rel->records[relationExpandRecords(rel)] = r;
 	return r;

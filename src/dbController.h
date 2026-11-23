@@ -12,8 +12,8 @@ struct Operand{
 	struct Operand *next;
 };
 struct View{
-	struct Database *selectedDB;
-	struct Relation *selectedRelation;
+	struct Database *db;
+	struct Relation *rel;
 	int *selectedRows;
 	int numSelectedRows;
 	unsigned int *selectedColumns;
