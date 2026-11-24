@@ -31,7 +31,25 @@ static struct Relation *newRelation(const char *name, const uint32_t numFields){
 	result->fieldsAllocated = numFields;
 	return result;
 }
-
+static void freeRecord(struct Record *rec){
+	free(rec->name);
+	free(rec->values);
+}
+static void freeRelation(struct Relation *rel){
+	for(unsigned int i = 0; i < rel->fieldsUsed; i++){
+		if(rel->fields[i]!=NULL){
+			free(rel->fields);
+			rel->fields[i] = NULL;
+		}
+	}
+	for(unsigned int i = 0; i < rel->recordsUsed; i++){
+		if(rel->records[i]!=NULL){
+			freeRecord(rel->records[i]);
+			rel->records[i] = NULL;
+		}
+	}
+	free(rel);
+}
 static void dbmakerelation(struct Database *const db, const char *name, const uint32_t numFields){
 	struct Relation *result = newRelation(name, numFields);
 	db->relationsAllocated++;
@@ -39,7 +57,19 @@ static void dbmakerelation(struct Database *const db, const char *name, const ui
 	*(db->relations+db->relationsUsed) = result;
 	db->relationsUsed++;
 }
-
+void databaseDropRelation(struct Database *const db, const struct Relation *const rel){
+	unsigned int i = 0;
+	for(;i < db->relationsUsed; i++){
+		if(db->relations[i]==rel){
+			freeRelation(db->relations[i]);
+			while(i < db->relationsUsed-1){
+				db->relations[i] = db->relations[i+1];
+				i++;
+			}
+			return;
+		}
+	}
+}
 struct Database *newDatabase(void){
 	struct Database *result = malloc(sizeof(struct Database));
 	result->makeRelation = dbmakerelation;

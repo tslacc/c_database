@@ -49,22 +49,24 @@ static void viewSelectColumns(struct View *const view, const char *const cmd, co
 // SELECT cols,... FROM relation and apply to DBController
 static void dbSelectHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *tok){
 	if(tok->tokenCount<4) return;
-	dbc->currentView->rel = getRelationByNameFromDB(dbc->currentView->db, cmd+tok->tokens[tok->tokenCount-1]);
-	viewSelectColumns(dbc->currentView, cmd, tok, 1, tok->tokenCount-2);
+	dbc->view->rel = getRelationByNameFromDB(dbc->view->db, cmd+tok->tokens[tok->tokenCount-1]);
+	viewSelectColumns(dbc->view, cmd, tok, 1, tok->tokenCount-2);
 }
-// DROP 
 static void dbDropHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *const tok){
 	if(tok->tokenCount<3) return;
 	//What is being dropped?
 	const char *const dropArg = cmd+tok->tokens[1];
 	if(strcmp(dropArg,"TABLE")){
-		//Drop TABLE handler
+		if(dbc->view->db!=NULL && dbc->view->rel!=NULL){
+			databaseDropRelation(dbc->view->db, dbc->view->rel);
+		}
+	} else if(strcmp(dropArg,"COLUMNS")){
 	}
 }
 // INSERT name, col values
 static void dbInsertHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *const tok){
-	if(tok -> tokenCount != 2+dbc->currentView->numSelectedColumns) return;
-	relationMakeRecord(dbc->currentView->rel, cmd+tok->tokens[1]);
+	if(tok -> tokenCount != 2+dbc->view->numSelectedColumns) return;
+	relationMakeRecord(dbc->view->rel, cmd+tok->tokens[1]);
 }
 static void printHelp(void){
 	printf("help print here\n");

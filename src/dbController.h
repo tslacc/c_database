@@ -17,11 +17,11 @@ struct View{
 	int *selectedRows;
 	int numSelectedRows;
 	unsigned int *selectedColumns;
-	int numSelectedColumns;
+	unsigned int numSelectedColumns;
 };
 struct DBController{
 	struct Database *currentDB;
-	struct View *currentView;
+	struct View *view;
 	char uInput[255];
 };
 struct DBController *newDBController(struct Database *currentDB);
