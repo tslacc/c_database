@@ -68,6 +68,11 @@ static void dbInsertHandler(struct DBController *const dbc, const char *const cm
 	if(tok -> tokenCount != 2+dbc->view->numSelectedColumns) return;
 	relationMakeRecord(dbc->view->rel, cmd+tok->tokens[1]);
 }
+static void dbAlterHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *const tok){
+	if(tok->tokenCount!=3) return;
+	if(strcmp(cmd+tok->tokens[1], "TABLE")==0)
+		dbc->view->rel = getRelationByNameFromDB(dbc->view->db, cmd+tok->tokens[2]);
+}
 static void printHelp(void){
 	printf("help print here\n");
 }
@@ -84,19 +89,15 @@ static void parseStringCommand(struct DBController *const dbc, char *const cmd){
 	if(strcmp((carg0),"CREATE")==0){
 		printf("test match create ok\n");
 		dbCreateTableHandler(dbc, cmd, &str_tok);
-	} else if (strcmp((carg0),"SELECT")==0){
+	} else if (strcmp((carg0),"SELECT")==0){//Select COLUMNS to modify
 		dbSelectHandler(dbc, cmd, &str_tok);
-	} else if (strcmp(carg0, "DROP")==0){
+	} else if (strcmp(carg0, "DROP")==0){//Drop current view columns
 		dbDropHandler(dbc, cmd, &str_tok);
 	} else if (strcmp(carg0, "INSERT")==0){ //Add new record(s). Should change mode
 		dbInsertHandler(dbc, cmd, &str_tok);
-	}/*
-	} else if (strcmp(tokens[0], "ALTER")==0){
-		//dbAlterHandler(dbc, cmd, cmdend);
-	} else if (strcmp(tokens[0], "DEBUG")==0){
-		//dbDebugHandler(dbc);
-	}
-	*/
+	} else if (strcmp(carg0, "ALTER")==0){//Select a RELATION to modify
+		dbAlterHandler(dbc, cmd, &str_tok);
+	} 
 	printf("end of parse\n");
 }
 
