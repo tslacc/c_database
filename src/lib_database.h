@@ -22,6 +22,7 @@ struct Database{
 	unsigned int relationsAllocated;
 	void (*makeRelation)(struct Database *const db, const char *name, const uint32_t numFields);
 };
+struct Relation *dbMakeRelation(struct Database *const db, const char *const name, const uint32_t numFields);
 struct Record *relationMakeRecord(struct Relation *const rel, const char *const name);
 void databaseDropRelation(struct Database *const db, const struct Relation *const rel);
 struct Database *newDatabase(void);

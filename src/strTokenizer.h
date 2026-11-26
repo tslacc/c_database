@@ -1,5 +1,5 @@
 struct StringTokens{
 	unsigned int tokenCount;
-	int *tokens;
+	unsigned int *tokens;
 };
 void strTokenize(char *inputStr, struct StringTokens *result);

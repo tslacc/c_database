@@ -50,12 +50,15 @@ static void freeRelation(struct Relation *rel){
 	}
 	free(rel);
 }
-static void dbmakerelation(struct Database *const db, const char *name, const uint32_t numFields){
+struct Relation *dbMakeRelation(struct Database *const db, const char *name, const uint32_t numFields){
+#include <stdio.h>
+	printf("Making relation 54\n");
 	struct Relation *result = newRelation(name, numFields);
 	db->relationsAllocated++;
 	db->relations = realloc(db->relations, sizeof(struct Relation *));
 	*(db->relations+db->relationsUsed) = result;
 	db->relationsUsed++;
+	return result;
 }
 void databaseDropRelation(struct Database *const db, const struct Relation *const rel){
 	unsigned int i = 0;
@@ -72,6 +75,5 @@ void databaseDropRelation(struct Database *const db, const struct Relation *cons
 }
 struct Database *newDatabase(void){
 	struct Database *result = malloc(sizeof(struct Database));
-	result->makeRelation = dbmakerelation;
 	return result;
 }

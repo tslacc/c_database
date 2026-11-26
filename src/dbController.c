@@ -18,7 +18,10 @@ static struct Relation *getRelationByNameFromDB(const struct Database *const db,
 }
 static void dbCreateTableHandler(struct DBController *const dbc, const char *const cmd, const struct StringTokens *tok){
 	if(tok->tokenCount!=3) return;
-	dbc->currentDB->makeRelation(dbc->currentDB, (cmd+tok->tokens[0]), atoi(cmd+tok->tokens[2]));
+	printf("Making relation w args %p, %s, %s\n", dbc->currentDB, cmd+tok->tokens[1], cmd+tok->tokens[2]);
+	printf("atoi %u\n", atoi(cmd+tok->tokens[2]));
+	dbc->view->rel = dbMakeRelation(dbc->currentDB, cmd+tok->tokens[1], atoi(cmd+tok->tokens[2]));
+	printf("Generated relation %p on line %u\n", dbc->view->rel, __LINE__);
 }
 static void viewSelectColumns(struct View *const view, const char *const cmd, const struct StringTokens *tok, const unsigned int begin, const unsigned int end){
 	unsigned int *validCols = 0;
@@ -77,17 +80,12 @@ static void printHelp(void){
 	printf("help print here\n");
 }
 static void parseStringCommand(struct DBController *const dbc, char *const cmd){
-	(void)dbc;
-	printf("rcvd %s %p to parse\n", cmd, cmd);
 	struct StringTokens str_tok;
 	strTokenize(cmd, &str_tok);
-	printf("retrieved %u tokens\n", str_tok.tokenCount);
+	printf("in str %s, retrieved %u tokens\n", cmd, str_tok.tokenCount);
 	printf("nextToken is %s\n", (cmd+str_tok.tokens[0]));
-	
-	printf("cmd is %p\n", cmd);
 	const char *const carg0 = cmd+str_tok.tokens[0];
-	if(strcmp((carg0),"CREATE")==0){
-		printf("test match create ok\n");
+	if(strcmp((carg0),"CREATE")==0){//CREATE Relname Colname
 		dbCreateTableHandler(dbc, cmd, &str_tok);
 	} else if (strcmp((carg0),"SELECT")==0){//Select COLUMNS to modify
 		dbSelectHandler(dbc, cmd, &str_tok);
@@ -97,13 +95,10 @@ static void parseStringCommand(struct DBController *const dbc, char *const cmd){
 		dbInsertHandler(dbc, cmd, &str_tok);
 	} else if (strcmp(carg0, "ALTER")==0){//Select a RELATION to modify
 		dbAlterHandler(dbc, cmd, &str_tok);
-	} 
-	printf("end of parse\n");
+	}
 }
 
 void dbcControlLoop(struct DBController *const dbc){
-	printf("%p control loop; enter command\n", dbc);
-	printf("Write result to buffer %p\n", dbc->uInput);
 	consoleLineToBuffer(dbc->uInput, sizeof(dbc->uInput));
 	printf("entered string: \n\t%s\n\tsize: %lu\n", dbc->uInput, strlen(dbc->uInput));
 	if(strcmp(dbc->uInput, "exit")==0){
@@ -116,5 +111,7 @@ void dbcControlLoop(struct DBController *const dbc){
 struct DBController *newDBController(struct Database *currentDB){
 	struct DBController *result = malloc(sizeof(struct DBController));
 	result->currentDB = currentDB;
+	result->view = malloc(sizeof(struct View));
+	result->view->db = currentDB;
 	return result;
 }
